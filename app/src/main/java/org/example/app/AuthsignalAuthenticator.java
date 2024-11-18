@@ -29,33 +29,34 @@ public class AuthsignalAuthenticator implements Authenticator {
 
     @Override
     public void authenticate(AuthenticationFlowContext context) {
-        System.out.println("Authenticating with Authsignal");
-        TrackRequest request = new TrackRequest();
-        request.userId = "userId";
-        request.action = "action";
+        System.out.println("Authenticating with Authsignal!");
+        // TrackRequest request = new TrackRequest();
+        // request.userId = "userId";
+        // request.action = "action";
 
-        // Object email = context.getHttpRequest();
+        // // Object email = context.getHttpRequest();
 
-        try {
-            CompletableFuture<TrackResponse> responseFuture = authsignalClient.track(request);
+        // try {
+        // CompletableFuture<TrackResponse> responseFuture =
+        // authsignalClient.track(request);
 
-            TrackResponse response = responseFuture.get();
+        // TrackResponse response = responseFuture.get();
 
-            String url = response.url;
+        // String url = response.url;
 
-            System.out.println("URL: " + url);
+        // System.out.println("URL: " + url);
 
-            Response responseRedirect = Response.status(Response.Status.FOUND)
-                    .location(URI.create(url))
-                    .build();
+        // Response responseRedirect = Response.status(Response.Status.FOUND)
+        // .location(URI.create(url))
+        // .build();
 
-            context.challenge(responseRedirect);
-            System.out.println("challenge set");
+        // context.challenge(responseRedirect);
+        // System.out.println("challenge set");
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            context.failure(AuthenticationFlowError.INTERNAL_ERROR);
-        }
+        // } catch (Exception e) {
+        // e.printStackTrace();
+        // context.failure(AuthenticationFlowError.INTERNAL_ERROR);
+        // }
         System.out.println("Success");
         context.success();
     }
