@@ -29,36 +29,36 @@ public class AuthsignalAuthenticator implements Authenticator {
 
     @Override
     public void authenticate(AuthenticationFlowContext context) {
-        System.out.println("Authenticating with Authsignal!");
-        // TrackRequest request = new TrackRequest();
-        // request.userId = "userId";
-        // request.action = "action";
+        System.out.println("Authenticating with Authsignal!!");
+        TrackRequest request = new TrackRequest();
+        request.userId = context.getUser().getId();
 
-        // // Object email = context.getHttpRequest();
+        System.out.println("userID: " + context.getUser().getId());
 
-        // try {
-        // CompletableFuture<TrackResponse> responseFuture =
-        // authsignalClient.track(request);
+        request.action = "action";
 
-        // TrackResponse response = responseFuture.get();
+        try {
+            CompletableFuture<TrackResponse> responseFuture = authsignalClient.track(request);
 
-        // String url = response.url;
+            TrackResponse response = responseFuture.get();
 
-        // System.out.println("URL: " + url);
+            String url = response.url;
 
-        // Response responseRedirect = Response.status(Response.Status.FOUND)
-        // .location(URI.create(url))
-        // .build();
+            System.out.println("URL: " + url);
 
-        // context.challenge(responseRedirect);
-        // System.out.println("challenge set");
+            Response responseRedirect = Response.status(Response.Status.FOUND)
+                    .location(URI.create(url))
+                    .build();
 
-        // } catch (Exception e) {
-        // e.printStackTrace();
-        // context.failure(AuthenticationFlowError.INTERNAL_ERROR);
-        // }
+            context.challenge(responseRedirect);
+            System.out.println("challenge set");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            context.failure(AuthenticationFlowError.INTERNAL_ERROR);
+        }
         System.out.println("Success");
-        context.success();
+        // context.success();
     }
 
     @Override
