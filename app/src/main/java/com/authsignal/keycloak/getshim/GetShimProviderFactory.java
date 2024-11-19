@@ -9,9 +9,11 @@ import org.keycloak.services.resource.RealmResourceProviderFactory;
 
 public class GetShimProviderFactory implements RealmResourceProviderFactory {
 
+    public static final String ID = "hello";
+
     @Override
     public String getId() {
-        return AuthsignalAuthenticatorFactory.PROVIDER_ID;
+        return ID;
     }
 
     @Override
