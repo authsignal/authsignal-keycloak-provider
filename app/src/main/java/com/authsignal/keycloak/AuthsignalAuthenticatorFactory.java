@@ -1,4 +1,4 @@
-package com.keycloak.providers;
+package com.authsignal.keycloak;
 
 import org.keycloak.authentication.Authenticator;
 import org.keycloak.authentication.AuthenticatorFactory;
@@ -7,10 +7,10 @@ import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.AuthenticationExecutionModel;
 import org.keycloak.provider.ProviderConfigProperty;
 import org.keycloak.Config;
-
 import java.util.List;
 
 public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
+    public static final String PROVIDER_ID = "authsignal-authenticator";
 
     @Override
     public AuthenticationExecutionModel.Requirement[] getRequirementChoices() {
@@ -36,7 +36,7 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
 
     @Override
     public String getReferenceCategory() {
-        return "getReferenceCategory";
+        return "MFA";
     }
 
     @Override
@@ -68,6 +68,6 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
 
     @Override
     public String getId() {
-        return "authsignal-authenticator";
+        return PROVIDER_ID;
     }
 }
