@@ -3,15 +3,13 @@ package com.authsignal.keycloak;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
-import org.keycloak.connections.httpclient.HttpClientProvider;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.MultivaluedMap;
-
-import org.keycloak.authentication.AbstractAuthenticationFlowContext;
 
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.Authenticator;
+import org.keycloak.authentication.RequiredActionProvider;
 
 import com.authsignal.model.TrackRequest;
 import com.authsignal.model.TrackResponse;
@@ -19,34 +17,34 @@ import com.authsignal.AuthsignalClient;
 
 import java.net.URI;
 import java.net.URLEncoder;
-import java.net.http.HttpRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 
 public class AuthsignalAuthenticator implements Authenticator {
+    public static final AuthsignalAuthenticator SINGLETON = new AuthsignalAuthenticator();
     private String baseUrl = "https:// dev-signal.authsignal.com/v1";
     private String secret = "nn4OBTWLrdXpc3102b2Ntq+6xEytGsTBjakBqiErRrFJnj2GkPUQsQ==";
 
     AuthsignalClient authsignalClient = new AuthsignalClient(
             "nn4OBTWLrdXpc3102b2Ntq+6xEytGsTBjakBqiErRrFJnj2GkPUQsQ==", "https://dev-signal.authsignal.com/v1");
-
+    
     @Override
     public void authenticate(AuthenticationFlowContext context) {
         System.out.println("Authenticating with Authsignal!!");
 
-        String token = context.getHttpRequest().getUri().getQueryParameters().getFirst("token");
+        MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
+        String token = queryParams.getFirst("token");
 
+        System.out.println("HAS TOKEN: " + token);
         if (token != null && !token.isEmpty()) {
+            System.out.println("HAS TOKEN: " + token);
             // do validation
             context.success();
         } else {
             System.out.println("userID: " + context.getUser().getId());
 
-            MultivaluedMap<String, String> queryParams = context.getHttpRequest().getUri().getQueryParameters();
-
             String sessionCode = queryParams.getFirst("session_code");
-
-            System.out.println("sessionCode: " + sessionCode);
+            URI actionUri = context.getActionUrl(sessionCode);
 
             String redirectUrl = context.getHttpRequest().getUri().getBaseUri().toString().replaceAll("/+$", "") +
                     "/realms/" + URLEncoder.encode(context.getRealm().getName(), StandardCharsets.UTF_8) +
@@ -59,10 +57,12 @@ public class AuthsignalAuthenticator implements Authenticator {
                     "&kc_tab_id="
                     + URLEncoder.encode(context.getAuthenticationSession().getTabId(), StandardCharsets.UTF_8)
                     +
-                    "&kc_session_code=" + URLEncoder.encode(sessionCode, StandardCharsets.UTF_8);
+                    "&kc_session_code=" + URLEncoder.encode(sessionCode, StandardCharsets.UTF_8)
+                    +
+                    "&kc_action_url=" + URLEncoder.encode(actionUri.toString(), StandardCharsets.UTF_8);
 
             TrackRequest request = new TrackRequest();
-            request.action = "action";
+            request.action = "signIn";
             request.userId = context.getUser().getId();
             request.redirectUrl = redirectUrl;
 
@@ -79,6 +79,7 @@ public class AuthsignalAuthenticator implements Authenticator {
                         .location(URI.create(url))
                         .build();
 
+
                 context.challenge(responseRedirect);
                 System.out.println("challenge set");
 
@@ -86,8 +87,6 @@ public class AuthsignalAuthenticator implements Authenticator {
                 e.printStackTrace();
                 context.failure(AuthenticationFlowError.INTERNAL_ERROR);
             }
-            System.out.println("Success");
-            // context.success();
         }
 
     }
@@ -97,6 +96,11 @@ public class AuthsignalAuthenticator implements Authenticator {
         System.out.println("Action method called");
         // Handle MFA verification response here
         // Example: Check if the MFA code provided by the user is valid
+        MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
+        String token = queryParams.getFirst("token");
+
+        System.out.println("HAS TOKEN: " + token);
+        context.success();
     }
 
     @Override

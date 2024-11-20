@@ -1,2 +1,2 @@
-   com.keycloak.providers.AuthsignalAuthenticatorFactory
+com.authsignal.keycloak.AuthsignalAuthenticatorFactory
    

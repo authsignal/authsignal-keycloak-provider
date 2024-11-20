@@ -1,19 +1,15 @@
-package com.authsignal.keycloak.getshim;
+package com.authsignal.keycloak;
 
-import com.authsignal.keycloak.AuthsignalAuthenticatorFactory;
-import org.keycloak.Config;
+import org.keycloak.Config.Scope;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.services.resource.RealmResourceProvider;
 import org.keycloak.services.resource.RealmResourceProviderFactory;
 
 public class GetShimProviderFactory implements RealmResourceProviderFactory {
-
-    public static final String ID = "hello";
-
     @Override
     public String getId() {
-        return ID;
+        return AuthsignalAuthenticatorFactory.PROVIDER_ID;
     }
 
     @Override
@@ -23,11 +19,11 @@ public class GetShimProviderFactory implements RealmResourceProviderFactory {
 
     @Override
     public RealmResourceProvider create(KeycloakSession keycloakSession) {
-        return new GetShimProvider(keycloakSession);
+        return new GetShimResourceProvider(keycloakSession);
     }
 
     @Override
-    public void init(Config.Scope scope) {
+    public void init(Scope scope) {
     }
 
     @Override
