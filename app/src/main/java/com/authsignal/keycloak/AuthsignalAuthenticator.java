@@ -76,7 +76,8 @@ public class AuthsignalAuthenticator implements Authenticator {
                     "&kc_action_url=" + URLEncoder.encode(actionUri.toString(), StandardCharsets.UTF_8);
 
             TrackRequest request = new TrackRequest();
-            request.action = "signIn";
+            request.action = actionCode(context);
+
             request.userId = context.getUser().getId();
             request.redirectUrl = redirectUrl;
             request.ipAddress = context.getConnection().getRemoteAddr();
@@ -90,12 +91,25 @@ public class AuthsignalAuthenticator implements Authenticator {
                 String url = response.url;
 
                 System.out.println("URL: " + url);
-
                 Response responseRedirect = Response.status(Response.Status.FOUND)
-                        .location(URI.create(url))
-                        .build();
+                .location(URI.create(url))
+                .build();
 
-                context.challenge(responseRedirect);
+                // If this configuration is set, and it defaults to true
+                // Then we always redirect regardless if any authenticators are set
+                // Else we only redirect if CHALLENGE _REQUIRED
+                if(enrolByDefault(context)){
+                    context.challenge(responseRedirect);
+                } else {
+                    if (response.state == UserActionState.CHALLENGE_REQUIRED) {
+                        context.challenge(responseRedirect);
+                    } else if (response.state == UserActionState.BLOCK) {
+                        context.failure(AuthenticationFlowError.ACCESS_DENIED);
+                    } else if (response.state == UserActionState.ALLOW) {
+                        context.success();
+                    }
+                }
+                
                 System.out.println("challenge set");
 
             } catch (Exception e) {
@@ -109,13 +123,7 @@ public class AuthsignalAuthenticator implements Authenticator {
     @Override
     public void action(AuthenticationFlowContext context) {
         System.out.println("Action method called");
-        // Handle MFA verification response here
-        // Example: Check if the MFA code provided by the user is valid
-        MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
-        String token = queryParams.getFirst("token");
-
-        System.out.println("HAS TOKEN: " + token);
-        context.success();
+        // No-op
     }
 
     @Override
@@ -154,5 +162,23 @@ public class AuthsignalAuthenticator implements Authenticator {
         if (config == null)
             return "";
         return String.valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_API_HOST_BASE_URL));
+    };
+
+    private String actionCode(AuthenticationFlowContext context) {
+        AuthenticatorConfigModel config = context.getAuthenticatorConfig();
+        if (config == null)
+            return "signIn";
+        String actionCode = String.valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_ACTION_CODE));
+        if(actionCode.length() == 0)
+            return "signIn";
+        return actionCode;
+    };
+
+    private Boolean enrolByDefault(AuthenticationFlowContext context) {
+        AuthenticatorConfigModel config = context.getAuthenticatorConfig();
+        if (config == null)
+            return true;
+        Boolean enrolByDefault = Boolean.valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_ENROL_BY_DEFAULT));
+        return enrolByDefault;
     };
 }
