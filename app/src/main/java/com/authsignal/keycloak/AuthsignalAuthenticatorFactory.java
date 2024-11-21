@@ -22,6 +22,7 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
             AuthenticationExecutionModel.Requirement.REQUIRED,
             AuthenticationExecutionModel.Requirement.DISABLED
     };
+
     @Override
     public AuthenticationExecutionModel.Requirement[] getRequirementChoices() {
         return REQUIREMENT_CHOICES;
@@ -55,7 +56,7 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
 
     @Override
     public List<ProviderConfigProperty> getConfigProperties() {
-        return List.of();
+        return configProperties;
     }
 
     @Override
