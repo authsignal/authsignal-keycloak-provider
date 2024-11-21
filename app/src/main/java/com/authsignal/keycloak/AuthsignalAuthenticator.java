@@ -3,7 +3,6 @@ package com.authsignal.keycloak;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
-import org.keycloak.sessions.AuthenticationSessionModel;
 
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -14,7 +13,11 @@ import org.keycloak.authentication.Authenticator;
 
 import com.authsignal.model.TrackRequest;
 import com.authsignal.model.TrackResponse;
+import com.authsignal.model.UserActionState;
+import com.authsignal.model.ValidateChallengeRequest;
+import com.authsignal.model.ValidateChallengeResponse;
 import com.authsignal.AuthsignalClient;
+import com.authsignal.exception.AuthsignalException;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -29,21 +32,35 @@ public class AuthsignalAuthenticator implements Authenticator {
 
     AuthsignalClient authsignalClient = new AuthsignalClient(
             "nn4OBTWLrdXpc3102b2Ntq+6xEytGsTBjakBqiErRrFJnj2GkPUQsQ==", "https://dev-signal.authsignal.com/v1");
-    
+
     @Override
     public void authenticate(AuthenticationFlowContext context) {
         System.out.println("Authenticating with Authsignal!!");
 
         MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
         String token = queryParams.getFirst("token");
+        String userId = context.getUser().getId();
 
         if (token != null && !token.isEmpty()) {
-            // do validation
-            context.success();
+            ValidateChallengeRequest request = new ValidateChallengeRequest();
+            request.token = token;
+            request.userId = userId;
+
+            try {
+                ValidateChallengeResponse response = authsignalClient.validateChallenge(request).get();
+                if (response.state == UserActionState.CHALLENGE_SUCCEEDED) {
+                    context.success();
+                } else {
+                    context.failure(AuthenticationFlowError.ACCESS_DENIED);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                context.failure(AuthenticationFlowError.INTERNAL_ERROR);
+            }
         } else {
             System.out.println("userID: " + context.getUser().getId());
             String sessionCode = context.generateAccessCode();
-            
+
             URI actionUri = context.getActionUrl(sessionCode);
 
             String redirectUrl = context.getHttpRequest().getUri().getBaseUri().toString().replaceAll("/+$", "") +
@@ -78,7 +95,6 @@ public class AuthsignalAuthenticator implements Authenticator {
                 Response responseRedirect = Response.status(Response.Status.FOUND)
                         .location(URI.create(url))
                         .build();
-
 
                 context.challenge(responseRedirect);
                 System.out.println("challenge set");
