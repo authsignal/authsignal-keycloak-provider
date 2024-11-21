@@ -82,6 +82,8 @@ public class AuthsignalAuthenticator implements Authenticator {
             request.action = "signIn";
             request.userId = context.getUser().getId();
             request.redirectUrl = redirectUrl;
+            request.ipAddress = context.getConnection().getRemoteAddr();
+            request.userAgent = context.getHttpRequest().getHttpHeaders().getHeaderString("User-Agent");
 
             try {
                 CompletableFuture<TrackResponse> responseFuture = authsignalClient.track(request);
