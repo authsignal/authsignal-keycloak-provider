@@ -3,13 +3,14 @@ package com.authsignal.keycloak;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
+import org.keycloak.sessions.AuthenticationSessionModel;
+
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.MultivaluedMap;
 
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.Authenticator;
-import org.keycloak.authentication.RequiredActionProvider;
 
 import com.authsignal.model.TrackRequest;
 import com.authsignal.model.TrackResponse;
@@ -22,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class AuthsignalAuthenticator implements Authenticator {
     public static final AuthsignalAuthenticator SINGLETON = new AuthsignalAuthenticator();
+
     private String baseUrl = "https:// dev-signal.authsignal.com/v1";
     private String secret = "nn4OBTWLrdXpc3102b2Ntq+6xEytGsTBjakBqiErRrFJnj2GkPUQsQ==";
 
@@ -35,15 +37,13 @@ public class AuthsignalAuthenticator implements Authenticator {
         MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
         String token = queryParams.getFirst("token");
 
-        System.out.println("HAS TOKEN: " + token);
         if (token != null && !token.isEmpty()) {
-            System.out.println("HAS TOKEN: " + token);
             // do validation
             context.success();
         } else {
             System.out.println("userID: " + context.getUser().getId());
-
-            String sessionCode = queryParams.getFirst("session_code");
+            String sessionCode = context.generateAccessCode();
+            
             URI actionUri = context.getActionUrl(sessionCode);
 
             String redirectUrl = context.getHttpRequest().getUri().getBaseUri().toString().replaceAll("/+$", "") +

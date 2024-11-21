@@ -76,22 +76,7 @@ public class GetShimResource {
         String kc_action_url = queryParams.getFirst("kc_action_url");
 
         kc_action_url = kc_action_url + "&session_code=" + sessionCode;
-        // kc_action_url = kc_action_url + "&token=" + token;
-
-        System.out.println("SHIM TOKEN: " + token);
-        System.out.println("SHIM ACTION: " + kc_action_url);
-        System.out.println("SHIM session_code: " + sessionCode);
-        String authSessionId = session.getProvider(CookieProvider.class).get(CookieType.AUTH_SESSION_ID);
-
-        session.getProvider(CookieProvider.class).get(CookieType.AUTH_SESSION_ID);
-        System.out.println("SHIM authSessionId: " + authSessionId);
-        System.out.println("SHIM clientId: " + clientId);
-        // ClientModel client = session.clients().getClientById(context.getRealm(), clientId);
-        // //ClientModel client = context.getRealm().getClientById(clientId);
-        // System.out.println("SHIM client: " + client.getClientId());
-        // AuthenticationSessionModel authSession = getAuthenticationSessionByIdAndClient(context.getRealm(), authSessionId, client, tabId);
-
-        // authSession.setAuthNote("AUTHSIGNAL_TOKEN",  token);
+        kc_action_url = kc_action_url + "&token=" + token;
 
         String redirect = "<html><body onload=\"document.forms[0].submit()\"><form id=\"form1\" action=\"" + kc_action_url + "\" method=\"post\"><input type=\"hidden\" name=\"authenticationExecution\" value=\"" + authenticationExecution + "\"><noscript><input type=\"submit\" value=\"Continue\"></noscript></form></body></html>";
         return Response.ok(redirect).build();
