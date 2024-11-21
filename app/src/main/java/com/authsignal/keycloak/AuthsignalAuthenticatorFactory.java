@@ -34,7 +34,7 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
         ProviderConfigProperty secretKey = new ProviderConfigProperty();
         secretKey.setName(PROP_SECRET_KEY);
         secretKey.setLabel("Authsignal Tenant Secret Key");
-        secretKey.setType(ProviderConfigProperty.STRING_TYPE);
+        secretKey.setType(ProviderConfigProperty.PASSWORD);
         secretKey.setHelpText("Secret key from Authsignal admin portal");
         configProperties.add(secretKey);
 
