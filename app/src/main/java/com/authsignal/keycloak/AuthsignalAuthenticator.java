@@ -18,7 +18,6 @@ import com.authsignal.model.UserActionState;
 import com.authsignal.model.ValidateChallengeRequest;
 import com.authsignal.model.ValidateChallengeResponse;
 import com.authsignal.AuthsignalClient;
-import com.authsignal.exception.AuthsignalException;
 
 import java.net.URI;
 import java.net.URLEncoder;
