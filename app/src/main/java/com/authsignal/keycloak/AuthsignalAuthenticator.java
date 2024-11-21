@@ -1,5 +1,6 @@
 package com.authsignal.keycloak;
 
+import org.keycloak.models.AuthenticatorConfigModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
@@ -27,14 +28,11 @@ import java.util.concurrent.CompletableFuture;
 public class AuthsignalAuthenticator implements Authenticator {
     public static final AuthsignalAuthenticator SINGLETON = new AuthsignalAuthenticator();
 
-    private String baseUrl = "https:// dev-signal.authsignal.com/v1";
-    private String secret = "nn4OBTWLrdXpc3102b2Ntq+6xEytGsTBjakBqiErRrFJnj2GkPUQsQ==";
-
-    AuthsignalClient authsignalClient = new AuthsignalClient(
-            "nn4OBTWLrdXpc3102b2Ntq+6xEytGsTBjakBqiErRrFJnj2GkPUQsQ==", "https://dev-signal.authsignal.com/v1");
-
     @Override
     public void authenticate(AuthenticationFlowContext context) {
+        AuthsignalClient authsignalClient = new AuthsignalClient(
+                secretKey(context), baseUrl(context));
+
         System.out.println("Authenticating with Authsignal!!");
 
         MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
@@ -144,4 +142,18 @@ public class AuthsignalAuthenticator implements Authenticator {
         System.out.println("close method called");
         // Cleanup if needed
     }
+
+    private String secretKey(AuthenticationFlowContext context) {
+        AuthenticatorConfigModel config = context.getAuthenticatorConfig();
+        if (config == null)
+            return "";
+        return String.valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_SECRET_KEY));
+    };
+
+    private String baseUrl(AuthenticationFlowContext context) {
+        AuthenticatorConfigModel config = context.getAuthenticatorConfig();
+        if (config == null)
+            return "";
+        return String.valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_API_HOST_BASE_URL));
+    };
 }
