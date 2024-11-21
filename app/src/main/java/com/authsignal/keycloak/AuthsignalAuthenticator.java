@@ -15,6 +15,7 @@ import com.authsignal.model.TrackRequest;
 import com.authsignal.model.TrackResponse;
 import com.authsignal.model.UserActionState;
 import com.authsignal.model.ValidateChallengeRequest;
+import com.authsignal.model.ValidateChallengeResponse;
 import com.authsignal.AuthsignalClient;
 import com.authsignal.exception.AuthsignalException;
 
@@ -41,28 +42,18 @@ public class AuthsignalAuthenticator implements Authenticator {
 
         String userId = context.getUser().getId();
         if (token != null && !token.isEmpty()) {
-            System.out.println("VALIDATING CHALLENGE!!");
             ValidateChallengeRequest request = new ValidateChallengeRequest();
             request.token = token;
             request.userId = userId;
 
             try {
-                authsignalClient.validateChallenge(request).thenAccept(response -> {
-                    System.out.println("VALIDATION RESPONSE: " + response.state);
-                    if (response.state == UserActionState.CHALLENGE_SUCCEEDED) {
-                        handleSuccess(context);
-                    } else {
-                        System.out.println("Challenge failed, access denied.");
-                        context.failure(AuthenticationFlowError.ACCESS_DENIED);
-                    }
-                }).exceptionally(e -> {
-                    System.out.println("ERROR VALIDATING CHALLENGE!!");
-                    e.printStackTrace();
-                    context.failure(AuthenticationFlowError.INTERNAL_ERROR);
-                    return null;
-                });
-            } catch (AuthsignalException e) {
-                System.out.println("ERROR VALIDATING CHALLENGE!!");
+                ValidateChallengeResponse response = authsignalClient.validateChallenge(request).get();
+                if (response.state == UserActionState.CHALLENGE_SUCCEEDED) {
+                    context.success();
+                } else {
+                    context.failure(AuthenticationFlowError.ACCESS_DENIED);
+                }
+            } catch (Exception e) {
                 e.printStackTrace();
                 context.failure(AuthenticationFlowError.INTERNAL_ERROR);
             }
@@ -114,12 +105,6 @@ public class AuthsignalAuthenticator implements Authenticator {
             }
         }
 
-    }
-
-    private void handleSuccess(AuthenticationFlowContext context) {
-        System.out.println("CHALLENGE SUCCEEDED!!");
-        context.success();
-        System.out.println("Authentication success processed, moving to next step.");
     }
 
     @Override
