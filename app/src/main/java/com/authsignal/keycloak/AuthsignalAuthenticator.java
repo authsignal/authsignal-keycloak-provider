@@ -39,8 +39,8 @@ public class AuthsignalAuthenticator implements Authenticator {
 
         MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
         String token = queryParams.getFirst("token");
-
         String userId = context.getUser().getId();
+
         if (token != null && !token.isEmpty()) {
             ValidateChallengeRequest request = new ValidateChallengeRequest();
             request.token = token;
