@@ -21,8 +21,8 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
   public static final String PROP_ENROL_BY_DEFAULT = "authsignal.enrolByDefault";
 
   private static AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
-      AuthenticationExecutionModel.Requirement.REQUIRED,
-      AuthenticationExecutionModel.Requirement.DISABLED
+    AuthenticationExecutionModel.Requirement.REQUIRED,
+    AuthenticationExecutionModel.Requirement.DISABLED
   };
 
   private static final Logger logger = Logger.getLogger(AuthsignalAuthenticator.class.getName());
@@ -32,7 +32,8 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
     return REQUIREMENT_CHOICES;
   }
 
-  private static final List<ProviderConfigProperty> configProperties = new ArrayList<ProviderConfigProperty>();
+  private static final List<ProviderConfigProperty> configProperties =
+      new ArrayList<ProviderConfigProperty>();
 
   static {
     ProviderConfigProperty secretKey = new ProviderConfigProperty();
@@ -110,16 +111,13 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
   }
 
   @Override
-  public void init(Config.Scope scope) {
-  }
+  public void init(Config.Scope scope) {}
 
   @Override
-  public void postInit(KeycloakSessionFactory keycloakSessionFactory) {
-  }
+  public void postInit(KeycloakSessionFactory keycloakSessionFactory) {}
 
   @Override
-  public void close() {
-  }
+  public void close() {}
 
   @Override
   public String getId() {
