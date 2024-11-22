@@ -7,18 +7,17 @@ import org.keycloak.services.resource.RealmResourceProvider;
 @Provider
 public class GetShimResourceProvider implements RealmResourceProvider {
 
-    private KeycloakSession session;
+  private KeycloakSession session;
 
-    public GetShimResourceProvider(KeycloakSession session) {
-        this.session = session;
-    }
+  public GetShimResourceProvider(KeycloakSession session) {
+    this.session = session;
+  }
 
-    @Override
-    public Object getResource() {
-        return new GetShimResource(session);
-    }
+  @Override
+  public Object getResource() {
+    return new GetShimResource(session);
+  }
 
-    @Override
-    public void close() {
-    }
+  @Override
+  public void close() {}
 }
