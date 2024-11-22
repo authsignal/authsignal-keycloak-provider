@@ -11,6 +11,8 @@ import org.keycloak.Config;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.logging.Logger;
+
 public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
     public static final String PROVIDER_ID = "authsignal-authenticator";
 
@@ -24,6 +26,8 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
             AuthenticationExecutionModel.Requirement.REQUIRED,
             AuthenticationExecutionModel.Requirement.DISABLED
     };
+
+    private static final Logger logger = Logger.getLogger(AuthsignalAuthenticator.class.getName());
 
     @Override
     public AuthenticationExecutionModel.Requirement[] getRequirementChoices() {
@@ -66,7 +70,8 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
         enrolByDefault.setLabel("Enrol by default");
         enrolByDefault.setType(ProviderConfigProperty.BOOLEAN_TYPE);
         enrolByDefault.setDefaultValue(true);
-        enrolByDefault.setHelpText("Optional: Toggle behaviour to redirect users to enrolment if no authenticators are avaiable, defaults to true.");
+        enrolByDefault.setHelpText(
+                "Optional: Toggle behaviour to redirect users to enrolment if no authenticators are avaiable, defaults to true.");
         configProperties.add(enrolByDefault);
     }
 
@@ -77,7 +82,7 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
 
     @Override
     public Authenticator create(KeycloakSession session) {
-        System.out.println("Creating new AuthsignalAuthenticator instance");
+        logger.info("Creating new AuthsignalAuthenticator instance");
         return AuthsignalAuthenticator.SINGLETON;
     }
 

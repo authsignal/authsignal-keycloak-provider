@@ -24,15 +24,17 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 
+import java.util.logging.Logger;
+
 public class AuthsignalAuthenticator implements Authenticator {
+    private static final Logger logger = Logger.getLogger(AuthsignalAuthenticator.class.getName());
+
     public static final AuthsignalAuthenticator SINGLETON = new AuthsignalAuthenticator();
 
     @Override
     public void authenticate(AuthenticationFlowContext context) {
         AuthsignalClient authsignalClient = new AuthsignalClient(
                 secretKey(context), baseUrl(context));
-
-        System.out.println("Authenticating with Authsignal!!");
 
         MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
         String token = queryParams.getFirst("token");
@@ -55,7 +57,6 @@ public class AuthsignalAuthenticator implements Authenticator {
                 context.failure(AuthenticationFlowError.INTERNAL_ERROR);
             }
         } else {
-            System.out.println("userID: " + context.getUser().getId());
             String sessionCode = context.generateAccessCode();
 
             URI actionUri = context.getActionUrl(sessionCode);
@@ -90,15 +91,14 @@ public class AuthsignalAuthenticator implements Authenticator {
 
                 String url = response.url;
 
-                System.out.println("URL: " + url);
                 Response responseRedirect = Response.status(Response.Status.FOUND)
-                .location(URI.create(url))
-                .build();
+                        .location(URI.create(url))
+                        .build();
 
                 // If this configuration is set, and it defaults to true
                 // Then we always redirect regardless if any authenticators are set
                 // Else we only redirect if CHALLENGE _REQUIRED
-                if(enrolByDefault(context)){
+                if (enrolByDefault(context)) {
                     context.challenge(responseRedirect);
                 } else {
                     if (response.state == UserActionState.CHALLENGE_REQUIRED) {
@@ -109,8 +109,8 @@ public class AuthsignalAuthenticator implements Authenticator {
                         context.success();
                     }
                 }
-                
-                System.out.println("challenge set");
+
+                logger.info("challenge set");
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -122,31 +122,31 @@ public class AuthsignalAuthenticator implements Authenticator {
 
     @Override
     public void action(AuthenticationFlowContext context) {
-        System.out.println("Action method called");
+        logger.info("Action method called");
         // No-op
     }
 
     @Override
     public boolean requiresUser() {
-        System.out.println("requiresUser method called");
+        logger.info("requiresUser method called");
         return true;
     }
 
     @Override
     public boolean configuredFor(KeycloakSession session, RealmModel realm, UserModel user) {
-        System.out.println("configuredFor method called");
+        logger.info("configuredFor method called");
         return true;
     }
 
     @Override
     public void setRequiredActions(KeycloakSession session, RealmModel realm, UserModel user) {
-        System.out.println("setRequiredActions method called");
+        logger.info("setRequiredActions method called");
         // No required actions
     }
 
     @Override
     public void close() {
-        System.out.println("close method called");
+        logger.info("close method called");
         // Cleanup if needed
     }
 
@@ -169,7 +169,7 @@ public class AuthsignalAuthenticator implements Authenticator {
         if (config == null)
             return "signIn";
         String actionCode = String.valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_ACTION_CODE));
-        if(actionCode.length() == 0)
+        if (actionCode.length() == 0)
             return "signIn";
         return actionCode;
     };
@@ -178,7 +178,8 @@ public class AuthsignalAuthenticator implements Authenticator {
         AuthenticatorConfigModel config = context.getAuthenticatorConfig();
         if (config == null)
             return true;
-        Boolean enrolByDefault = Boolean.valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_ENROL_BY_DEFAULT));
+        Boolean enrolByDefault = Boolean
+                .valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_ENROL_BY_DEFAULT));
         return enrolByDefault;
     };
 }
