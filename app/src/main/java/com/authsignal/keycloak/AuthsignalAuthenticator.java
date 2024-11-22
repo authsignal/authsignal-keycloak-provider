@@ -97,6 +97,9 @@ public class AuthsignalAuthenticator implements Authenticator {
         // Then we always redirect regardless if any authenticators are set
         // Else we only redirect if CHALLENGE _REQUIRED
         if (enrolByDefault(context)) {
+          if (response.state == UserActionState.BLOCK) {
+            context.failure(AuthenticationFlowError.ACCESS_DENIED);
+          }
           context.challenge(responseRedirect);
         } else {
           if (response.state == UserActionState.CHALLENGE_REQUIRED) {
