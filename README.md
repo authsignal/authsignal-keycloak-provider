@@ -20,3 +20,6 @@ This will be located in:
 ~/.m2/repository/com/authsignal/authsignal-java/1.0.0/
 
 Copy the authsignal-java-1.0.0.jar file to the keycloak server's providers directory.
+
+To format all files:
+./gradlew spotlessApply
