@@ -6,7 +6,6 @@
 
 plugins {
     id 'java'
-    id 'com.diffplug.spotless' version '6.25.0'
 }
 
 group 'com.keycloak'
@@ -33,9 +32,3 @@ jar {
         )
     }
 }
-
-spotless {
-      java {
-          googleJavaFormat('1.25.0')
-      }
-  }
