@@ -104,8 +104,6 @@ public class AuthsignalAuthenticator implements Authenticator {
           }
         }
 
-        logger.info("challenge set");
-
       } catch (Exception e) {
         e.printStackTrace();
         context.failure(AuthenticationFlowError.INTERNAL_ERROR);
