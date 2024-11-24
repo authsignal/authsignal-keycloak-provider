@@ -6,6 +6,9 @@ import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.services.resource.RealmResourceProvider;
 import org.keycloak.services.resource.RealmResourceProviderFactory;
 
+/**
+ * Factory class for creating instances of GetShimResourceProvider.
+ */
 public class GetShimProviderFactory implements RealmResourceProviderFactory {
   @Override
   public String getId() {

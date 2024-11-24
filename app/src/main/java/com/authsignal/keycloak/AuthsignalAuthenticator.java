@@ -58,22 +58,17 @@ public class AuthsignalAuthenticator implements Authenticator {
 
       String redirectUrl =
           context.getHttpRequest().getUri().getBaseUri().toString().replaceAll("/+$", "")
-              + "/realms/"
-              + URLEncoder.encode(context.getRealm().getName(), StandardCharsets.UTF_8)
-              + "/authsignal-authenticator/callback"
-              + "?kc_client_id="
-              + URLEncoder.encode(
-                  context.getAuthenticationSession().getClient().getClientId(),
+              + "/realms/" + URLEncoder.encode(context.getRealm().getName(), StandardCharsets.UTF_8)
+              + "/authsignal-authenticator/callback" + "?kc_client_id="
+              + URLEncoder.encode(context.getAuthenticationSession().getClient().getClientId(),
                   StandardCharsets.UTF_8)
               + "&kc_execution="
               + URLEncoder.encode(context.getExecution().getId(), StandardCharsets.UTF_8)
               + "&kc_tab_id="
-              + URLEncoder.encode(
-                  context.getAuthenticationSession().getTabId(), StandardCharsets.UTF_8)
-              + "&kc_session_code="
-              + URLEncoder.encode(sessionCode, StandardCharsets.UTF_8)
-              + "&kc_action_url="
-              + URLEncoder.encode(actionUri.toString(), StandardCharsets.UTF_8);
+              + URLEncoder.encode(context.getAuthenticationSession().getTabId(),
+                  StandardCharsets.UTF_8)
+              + "&kc_session_code=" + URLEncoder.encode(sessionCode, StandardCharsets.UTF_8)
+              + "&kcActionUrl=" + URLEncoder.encode(actionUri.toString(), StandardCharsets.UTF_8);
 
       TrackRequest request = new TrackRequest();
       request.action = actionCode(context);
@@ -161,8 +156,8 @@ public class AuthsignalAuthenticator implements Authenticator {
     if (config == null) {
       return "";
     }
-    return String.valueOf(
-        config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_API_HOST_BASE_URL));
+    return String
+        .valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_API_HOST_BASE_URL));
   }
 
   private String actionCode(AuthenticationFlowContext context) {
@@ -183,9 +178,8 @@ public class AuthsignalAuthenticator implements Authenticator {
     if (config == null) {
       return true;
     }
-    Boolean enrolByDefault =
-        Boolean.valueOf(
-            config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_ENROL_BY_DEFAULT));
+    Boolean enrolByDefault = Boolean
+        .valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_ENROL_BY_DEFAULT));
     return enrolByDefault;
   }
 }

@@ -16,6 +16,9 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.sessions.RootAuthenticationSessionModel;
 
+/**
+ * Class for creating GetShimResource.
+ */
 public class GetShimResource {
   private final KeycloakSession session;
 
@@ -23,6 +26,10 @@ public class GetShimResource {
     this.session = session;
   }
 
+  /**
+   * Handles the callback for the authentication process.
+   * 
+   */
   @GET
   @Path("/callback")
   @Produces(MediaType.TEXT_HTML)
@@ -38,10 +45,8 @@ public class GetShimResource {
 
     UriInfo uriInfo = context.getUri();
     MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
-    if (realm.equalsIgnoreCase("")
-        || !queryParams.containsKey("kc_execution")
-        || !queryParams.containsKey("kc_client_id")
-        || !queryParams.containsKey("kc_tab_id")) {
+    if (realm.equalsIgnoreCase("") || !queryParams.containsKey("kc_execution")
+        || !queryParams.containsKey("kc_client_id") || !queryParams.containsKey("kc_tab_id")) {
       // these fields are required, throw a bad request error
       return Response.status(400).build();
     }
@@ -67,22 +72,27 @@ public class GetShimResource {
 
     String sessionCode = queryParams.getFirst("kc_session_code");
     String token = queryParams.getFirst("token");
-    String kc_action_url = queryParams.getFirst("kc_action_url");
+    String kcActionUrl = queryParams.getFirst("kcActionUrl");
 
-    kc_action_url = kc_action_url + "&session_code=" + sessionCode;
-    kc_action_url = kc_action_url + "&token=" + token;
+    kcActionUrl = kcActionUrl + "&session_code=" + sessionCode;
+    kcActionUrl = kcActionUrl + "&token=" + token;
 
     String redirect =
         "<html><body onload=\"document.forms[0].submit()\"><form id=\"form1\" action=\""
-            + kc_action_url
+            + kcActionUrl
             + "\" method=\"post\"><input type=\"hidden\" name=\"authenticationExecution\" value=\""
             + authenticationExecution
-            + "\"><noscript><input type=\"submit\" value=\"Continue\"></noscript></form></body></html>";
+            + "\"><noscript><input type=\"submit\" value=\"Continue\"></noscript></form>"
+            + "</body></html>";
     return Response.ok(redirect).build();
   }
 
-  public AuthenticationSessionModel getAuthenticationSessionByIdAndClient(
-      RealmModel realm, String authSessionId, ClientModel client, String tabId) {
+  /**
+   * AuthenticationSessionModel.
+   * 
+   */
+  public AuthenticationSessionModel getAuthenticationSessionByIdAndClient(RealmModel realm,
+      String authSessionId, ClientModel client, String tabId) {
     RootAuthenticationSessionModel rootAuthSession =
         session.authenticationSessions().getRootAuthenticationSession(realm, authSessionId);
     return rootAuthSession == null ? null : rootAuthSession.getAuthenticationSession(client, tabId);
