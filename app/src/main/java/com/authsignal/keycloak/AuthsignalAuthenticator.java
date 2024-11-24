@@ -68,7 +68,7 @@ public class AuthsignalAuthenticator implements Authenticator {
               + URLEncoder.encode(context.getAuthenticationSession().getTabId(),
                   StandardCharsets.UTF_8)
               + "&kc_session_code=" + URLEncoder.encode(sessionCode, StandardCharsets.UTF_8)
-              + "&kcActionUrl=" + URLEncoder.encode(actionUri.toString(), StandardCharsets.UTF_8);
+              + "&kc_action_url=" + URLEncoder.encode(actionUri.toString(), StandardCharsets.UTF_8);
 
       TrackRequest request = new TrackRequest();
       request.action = actionCode(context);

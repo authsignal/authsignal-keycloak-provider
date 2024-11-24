@@ -72,7 +72,7 @@ public class GetShimResource {
 
     String sessionCode = queryParams.getFirst("kc_session_code");
     String token = queryParams.getFirst("token");
-    String kcActionUrl = queryParams.getFirst("kcActionUrl");
+    String kcActionUrl = queryParams.getFirst("kc_action_url");
 
     kcActionUrl = kcActionUrl + "&session_code=" + sessionCode;
     kcActionUrl = kcActionUrl + "&token=" + token;
