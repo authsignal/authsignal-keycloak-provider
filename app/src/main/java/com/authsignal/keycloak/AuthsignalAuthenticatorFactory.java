@@ -11,6 +11,11 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.provider.ProviderConfigProperty;
 
+/**
+ * Factory class for creating Authsignal authenticator instances.
+ * Implements AuthenticatorFactory to provide configuration and lifecycle management
+ * for the Authsignal authentication mechanism in Keycloak.
+ */
 public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
   public static final String PROVIDER_ID = "authsignal-authenticator";
 
@@ -20,10 +25,9 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
   public static final String PROP_ACTION_CODE = "authsignal.actionCode";
   public static final String PROP_ENROL_BY_DEFAULT = "authsignal.enrolByDefault";
 
-  private static AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
-    AuthenticationExecutionModel.Requirement.REQUIRED,
-    AuthenticationExecutionModel.Requirement.DISABLED
-  };
+  private static AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES =
+      {AuthenticationExecutionModel.Requirement.REQUIRED,
+          AuthenticationExecutionModel.Requirement.DISABLED};
 
   private static final Logger logger = Logger.getLogger(AuthsignalAuthenticator.class.getName());
 
@@ -69,9 +73,8 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
     enrolByDefault.setLabel("Enrol by default");
     enrolByDefault.setType(ProviderConfigProperty.BOOLEAN_TYPE);
     enrolByDefault.setDefaultValue(true);
-    enrolByDefault.setHelpText(
-        "Optional: Toggle behaviour to redirect users to enrolment "
-            + "if no authenticators are avaiable, defaults to true.");
+    enrolByDefault.setHelpText("Optional: Toggle behaviour to redirect users to enrolment "
+        + "if no authenticators are avaiable, defaults to true.");
     configProperties.add(enrolByDefault);
   }
 
