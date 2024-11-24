@@ -16,9 +16,7 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.sessions.RootAuthenticationSessionModel;
 
-/**
- * Class for creating GetShimResource.
- */
+/** Class for creating GetShimResource. */
 public class GetShimResource {
   private final KeycloakSession session;
 
@@ -26,10 +24,7 @@ public class GetShimResource {
     this.session = session;
   }
 
-  /**
-   * Handles the callback for the authentication process.
-   * 
-   */
+  /** Handles the callback for the authentication process. */
   @GET
   @Path("/callback")
   @Produces(MediaType.TEXT_HTML)
@@ -45,8 +40,10 @@ public class GetShimResource {
 
     UriInfo uriInfo = context.getUri();
     MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
-    if (realm.equalsIgnoreCase("") || !queryParams.containsKey("kc_execution")
-        || !queryParams.containsKey("kc_client_id") || !queryParams.containsKey("kc_tab_id")) {
+    if (realm.equalsIgnoreCase("")
+        || !queryParams.containsKey("kc_execution")
+        || !queryParams.containsKey("kc_client_id")
+        || !queryParams.containsKey("kc_tab_id")) {
       // these fields are required, throw a bad request error
       return Response.status(400).build();
     }
@@ -87,12 +84,9 @@ public class GetShimResource {
     return Response.ok(redirect).build();
   }
 
-  /**
-   * AuthenticationSessionModel.
-   * 
-   */
-  public AuthenticationSessionModel getAuthenticationSessionByIdAndClient(RealmModel realm,
-      String authSessionId, ClientModel client, String tabId) {
+  /** AuthenticationSessionModel. */
+  public AuthenticationSessionModel getAuthenticationSessionByIdAndClient(
+      RealmModel realm, String authSessionId, ClientModel client, String tabId) {
     RootAuthenticationSessionModel rootAuthSession =
         session.authenticationSessions().getRootAuthenticationSession(realm, authSessionId);
     return rootAuthSession == null ? null : rootAuthSession.getAuthenticationSession(client, tabId);

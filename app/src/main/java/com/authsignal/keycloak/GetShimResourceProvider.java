@@ -4,9 +4,7 @@ import jakarta.ws.rs.ext.Provider;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.services.resource.RealmResourceProvider;
 
-/**
- * Class for creating instances of GetShimResourceProvider.
- */
+/** Class for creating instances of GetShimResourceProvider. */
 @Provider
 public class GetShimResourceProvider implements RealmResourceProvider {
 

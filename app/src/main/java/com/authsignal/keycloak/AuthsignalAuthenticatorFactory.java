@@ -70,7 +70,8 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
     enrolByDefault.setType(ProviderConfigProperty.BOOLEAN_TYPE);
     enrolByDefault.setDefaultValue(true);
     enrolByDefault.setHelpText(
-        "Optional: Toggle behaviour to redirect users to enrolment if no authenticators are avaiable, defaults to true.");
+        "Optional: Toggle behaviour to redirect users to enrolment "
+            + "if no authenticators are avaiable, defaults to true.");
     configProperties.add(enrolByDefault);
   }
 
