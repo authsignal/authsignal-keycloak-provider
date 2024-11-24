@@ -88,8 +88,11 @@ public class AuthsignalAuthenticator implements Authenticator {
         Response responseRedirect =
             Response.status(Response.Status.FOUND).location(URI.create(url)).build();
 
-        // If this configuration is set, and it defaults to true
-        if (enrolByDefault(context)) {
+        boolean isEnrolled = response.isEnrolled;
+
+        // If the user is not enrolled, and the enrol by default configuration is set,
+        // redirect to the enrolment page
+        if (enrolByDefault(context) && !isEnrolled) {
           if (response.state == UserActionState.BLOCK) {
             context.failure(AuthenticationFlowError.ACCESS_DENIED);
           }
@@ -101,6 +104,8 @@ public class AuthsignalAuthenticator implements Authenticator {
             context.failure(AuthenticationFlowError.ACCESS_DENIED);
           } else if (response.state == UserActionState.ALLOW) {
             context.success();
+          } else {
+            context.failure(AuthenticationFlowError.ACCESS_DENIED);
           }
         }
 
