@@ -4,8 +4,8 @@
 package org.example.app;
 
 class MessageUtilsTest {
-    // @Test
-    // void testGetMessage() {
-    // // No tests needed
-    // }
+  // @Test
+  // void testGetMessage() {
+  // // No tests needed
+  // }
 }
