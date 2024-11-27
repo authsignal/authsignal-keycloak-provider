@@ -15,7 +15,7 @@ Please view our [official Keycloak configuration documentation](https://docs.aut
 
 
 ## Building on your computer
-You should be able to build and package this project using Gradle. The gradle command will compile the source code and build the JAR files for you. 
+You can build and package this project using Gradle. The Gradle build command will compile the source code and generate the JAR files.
 
 `./gradlew build`
 
