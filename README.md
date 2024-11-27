@@ -19,4 +19,4 @@ You can build and package this project using Gradle. The Gradle build command wi
 
 `./gradlew build`
 
-You will need to use the output JAR `app/build/libs/authsignal-v*.jar`  and copy it to your Keycloak server's `/providers` directory
+You will need to use the output JAR `app/build/libs/authsignal-v*.jar`  and copy it to your Keycloak server's `/providers` directory.
