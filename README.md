@@ -1,22 +1,22 @@
-To add to Keycloak:
+# Authsignal Key Cloak Authenticator - Enable MFA and Passkeys for Keycloak
+Authenticator for [Keycloak](https://github.com/keycloak/keycloak) that uses Authsignal's [Pre-built UI](https://docs.authsignal.com/scenarios/launching-the-prebuilt-ui) to challenge the user for MFA/Passworldess/Passkeys as part of a Keycloak login flow.
 
-./gradlew build
+This has been tested against Keycloak 26+ (Quarkus) and Java 18+.
 
-Take the generated app/build/libs/app-1.0.0.jar and add it to the Keycloak server's providers directory.
+## How to use
+### Install the authenticator extension
+1. Build or download the pre-built "authsignal-v*.jar" JAR file.
+2. Download the Authsignal (version 2.0+) Java SDK (dependency) JAR file from [maven](https://mvnrepository.com/artifact/com.authsignal/authsignal-java)
+3. Copy the above two JAR files to your keycloak server `/providers/` directory
 
-In your keycloak server
 
-./bin/kc.sh build
+### Configure the authenticator
+Please view our [official Keycloak configuration documentation](https://docs.authsignal.com/integrations/keycloak)
 
-./bin/kc.sh start-dev
 
-To include dependencies in the keycloak server, add download the jar from maven central and add it to the server's providers directory.
+## Building on your computer
+You should be able to build and package this project using Gradle. The gradle command will compile the source code and build the JAR files for you. 
 
-e.g:
-mvn dependency:get -Dartifact=com.authsignal:authsignal-java:1.0.0 -Ddest=path/to/directory
+`./gradlew build`
 
-This will be located in:
-
-~/.m2/repository/com/authsignal/authsignal-java/1.0.0/
-
-Copy the authsignal-java-1.0.0.jar file to the keycloak server's providers directory.
+You will need to use the output JAR `app/build/libs/authsignal-v*.jar`  and copy it to your Keycloak server's `/providers` directory
