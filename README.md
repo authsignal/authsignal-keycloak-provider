@@ -1,5 +1,5 @@
 # Authsignal Key Cloak Authenticator - Enable MFA and Passkeys for Keycloak
-Authenticator for [Keycloak](https://github.com/keycloak/keycloak) that uses Authsignal's [Pre-built UI](https://docs.authsignal.com/scenarios/launching-the-prebuilt-ui) to challenge the user for MFA/Passworldess/Passkeys as part of a Keycloak login flow.
+Authenticator for [Keycloak](https://github.com/keycloak/keycloak) that uses Authsignal's [Pre-built UI](https://docs.authsignal.com/scenarios/launching-the-prebuilt-ui) to challenge the user for MFA/Passwordless/Passkeys as part of a Keycloak login flow.
 
 This has been tested against Keycloak 26+ (Quarkus) and Java 18+.
 
