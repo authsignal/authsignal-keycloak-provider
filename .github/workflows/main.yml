@@ -1,9 +1,8 @@
 name: "[Main] - Build Release"
 
 on:
-  push:
-    branches:
-      - pipeline
+  release:
+    types: [created]
 
 permissions: write-all
 
