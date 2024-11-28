@@ -1,0 +1,32 @@
+name: "[Main] - Build Release"
+
+on:
+  push:
+    branches:
+      - pipeline
+
+jobs:
+  build-jar:
+    needs: install-and-test
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: "https://registry.npmjs.org"
+      - name: Install dependencies
+        run: |
+          npm install
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: adopt
+          cache: gradle
+      - name: Build JAR
+        run: |
+          ./gradlew build
+      - name: List JAR
+        run: |
+          ls app/build/libs/
