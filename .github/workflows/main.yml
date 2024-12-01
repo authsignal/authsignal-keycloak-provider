@@ -1,0 +1,31 @@
+name: "[Main] - Build Release"
+
+on:
+  release:
+    types: [created]
+
+permissions: write-all
+
+jobs:
+  build-jar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: adopt
+          cache: gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582
+      - name: Build JAR
+        run: |
+          ./gradlew build
+      - name: List JAR
+        run: |
+          ls app/build/libs/
+      - name: Publish package
+        run: ./gradlew publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
