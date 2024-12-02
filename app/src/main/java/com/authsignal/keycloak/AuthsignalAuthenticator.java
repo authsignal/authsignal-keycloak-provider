@@ -90,8 +90,8 @@ public class AuthsignalAuthenticator implements Authenticator {
 
         boolean isEnrolled = response.isEnrolled;
 
-        // If the user is not enrolled, and the enrol by default configuration is set,
-        // redirect to the enrolment page
+        // If the user is not enrolled (has no authenticators) and enrollment by default is enabled,
+        // display the challenge page to allow the user to enroll.
         if (enrolByDefault(context) && !isEnrolled) {
           if (response.state == UserActionState.BLOCK) {
             context.failure(AuthenticationFlowError.ACCESS_DENIED);
@@ -166,14 +166,14 @@ public class AuthsignalAuthenticator implements Authenticator {
   private String actionCode(AuthenticationFlowContext context) {
     AuthenticatorConfigModel config = context.getAuthenticatorConfig();
     if (config == null) {
-      return "signIn";
+      return "sign-in";
     }
 
     Object actionCodeObj = config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_ACTION_CODE);
     String actionCode = (actionCodeObj != null) ? actionCodeObj.toString() : null;
 
     if (actionCode == null) {
-      return "signIn";
+      return "sign-in";
     }
     return actionCode;
   }
