@@ -58,8 +58,6 @@ public class GetShimResource {
     actionUrl = actionUrl + "&tab_id=" + tabId;
 
     if (!queryParams.containsKey("kc_session_code") || !queryParams.containsKey("token")) {
-      // session code is required, redirect back to beginning of auth flow
-      // or if they don't have duo information, send them to beginning as well
       try {
         return Response.temporaryRedirect(new URI(actionUrl)).build();
       } catch (URISyntaxException exception) {
