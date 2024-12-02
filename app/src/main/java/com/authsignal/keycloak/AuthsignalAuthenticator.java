@@ -168,9 +168,11 @@ public class AuthsignalAuthenticator implements Authenticator {
     if (config == null) {
       return "signIn";
     }
-    String actionCode =
-        String.valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_ACTION_CODE));
-    if (actionCode.length() == 0) {
+
+    Object actionCodeObj = config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_ACTION_CODE);
+    String actionCode = (actionCodeObj != null) ? actionCodeObj.toString() : null;
+
+    if (actionCode == null) {
       return "signIn";
     }
     return actionCode;
