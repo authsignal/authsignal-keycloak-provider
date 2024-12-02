@@ -65,15 +65,15 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
     actionCode.setName(PROP_ACTION_CODE);
     actionCode.setLabel("Action code");
     actionCode.setType(ProviderConfigProperty.STRING_TYPE);
-    actionCode.setHelpText("Optional: Set your own action code, defaults to signIn");
+    actionCode.setHelpText("Optional: Set your own action code, defaults to sign-in");
     configProperties.add(actionCode);
 
     ProviderConfigProperty enrolByDefault = new ProviderConfigProperty();
     enrolByDefault.setName(PROP_ENROL_BY_DEFAULT);
-    enrolByDefault.setLabel("Enrol by default");
+    enrolByDefault.setLabel("Enroll by default");
     enrolByDefault.setType(ProviderConfigProperty.BOOLEAN_TYPE);
     enrolByDefault.setDefaultValue(true);
-    enrolByDefault.setHelpText("Optional: Auto enrol user if no authenticators "
+    enrolByDefault.setHelpText("Optional: Auto enroll user if no authenticators "
         + "are available i.e. the user is not enrolled. Defaults to true.");
     configProperties.add(enrolByDefault);
   }
