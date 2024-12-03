@@ -49,9 +49,9 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
 
     ProviderConfigProperty baseUrl = new ProviderConfigProperty();
     baseUrl.setName(PROP_API_HOST_BASE_URL);
-    baseUrl.setLabel("Authsignal API Region Base URL");
+    baseUrl.setLabel("Authsignal API URL");
     baseUrl.setType(ProviderConfigProperty.STRING_TYPE);
-    baseUrl.setHelpText("API Region Base URL from Authsignal admin portal");
+    baseUrl.setHelpText("API URL from Authsignal admin portal");
     configProperties.add(baseUrl);
 
     ProviderConfigProperty tenantId = new ProviderConfigProperty();
