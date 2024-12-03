@@ -74,8 +74,6 @@ public class AuthsignalAuthenticator implements Authenticator {
       TrackRequest request = new TrackRequest();
       request.action = actionCode(context);
 
-      logger.info("redirectUrl!!: " + redirectUrl);
-
       request.userId = context.getUser().getId();
       request.attributes = new TrackAttributes();
       request.attributes.redirectUrl = redirectUrl;
