@@ -1,6 +1,7 @@
 package com.authsignal.keycloak;
 
 import com.authsignal.AuthsignalClient;
+import com.authsignal.model.TrackAttributes;
 import com.authsignal.model.TrackRequest;
 import com.authsignal.model.TrackResponse;
 import com.authsignal.model.UserActionState;
@@ -73,10 +74,14 @@ public class AuthsignalAuthenticator implements Authenticator {
       TrackRequest request = new TrackRequest();
       request.action = actionCode(context);
 
+      logger.info("redirectUrl!!: " + redirectUrl);
+
       request.userId = context.getUser().getId();
-      request.redirectUrl = redirectUrl;
-      request.ipAddress = context.getConnection().getRemoteAddr();
-      request.userAgent = context.getHttpRequest().getHttpHeaders().getHeaderString("User-Agent");
+      request.attributes = new TrackAttributes();
+      request.attributes.redirectUrl = redirectUrl;
+      request.attributes.ipAddress = context.getConnection().getRemoteAddr();
+      request.attributes.userAgent =
+          context.getHttpRequest().getHttpHeaders().getHeaderString("User-Agent");
 
       try {
         CompletableFuture<TrackResponse> responseFuture = authsignalClient.track(request);
@@ -90,7 +95,8 @@ public class AuthsignalAuthenticator implements Authenticator {
 
         boolean isEnrolled = response.isEnrolled;
 
-        // If the user is not enrolled (has no authenticators) and enrollment by default is enabled,
+        // If the user is not enrolled (has no authenticators) and enrollment by default
+        // is enabled,
         // display the challenge page to allow the user to enroll.
         if (enrolByDefault(context) && !isEnrolled) {
           if (response.state == UserActionState.BLOCK) {

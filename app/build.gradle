@@ -14,14 +14,13 @@ version '1.0.2'
 
 repositories {
     mavenCentral()
-    // maven { url 'https://repository.jboss.org/nexus/content/groups/public/' }
 }
 
 dependencies {
     implementation 'org.keycloak:keycloak-core:26.0.5' // Adjust version as needed
     implementation 'org.keycloak:keycloak-server-spi:26.0.5' // Adjust version as needed
     implementation 'org.keycloak:keycloak-server-spi-private:26.0.5' // Adjust version as needed
-    implementation group: 'com.authsignal', name: 'authsignal-java', version: '1.0.0'
+    implementation group: 'com.authsignal', name: 'authsignal-java', version: '2.0.1'
     implementation group: 'jakarta.ws.rs', name: 'jakarta.ws.rs-api', version: '4.0.0'
 }
 
