@@ -74,12 +74,12 @@ public class AuthsignalAuthenticator implements Authenticator {
       TrackRequest request = new TrackRequest();
       request.action = actionCode(context);
 
-      request.userId = context.getUser().getId();
       request.attributes = new TrackAttributes();
       request.attributes.redirectUrl = redirectUrl;
       request.attributes.ipAddress = context.getConnection().getRemoteAddr();
       request.attributes.userAgent =
           context.getHttpRequest().getHttpHeaders().getHeaderString("User-Agent");
+      request.userId = context.getUser().getId();
 
       try {
         CompletableFuture<TrackResponse> responseFuture = authsignalClient.track(request);
@@ -150,21 +150,41 @@ public class AuthsignalAuthenticator implements Authenticator {
     // Cleanup if needed
   }
 
+  private String generateConfigErrorMessage(String prefix) {
+    return prefix + " Add provider details in your Keycloak admin portal.";
+  }
+
   private String secretKey(AuthenticationFlowContext context) {
     AuthenticatorConfigModel config = context.getAuthenticatorConfig();
     if (config == null) {
-      return "";
+      throw new IllegalStateException(
+          generateConfigErrorMessage("Authsignal provider config is missing."));
     }
-    return String.valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_SECRET_KEY));
+    Object secretKeyObj = config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_SECRET_KEY);
+    String tenantSecretKey = (secretKeyObj != null) ? secretKeyObj.toString() : null;
+
+    if (tenantSecretKey == null || tenantSecretKey.isEmpty()) {
+      throw new IllegalStateException(
+          generateConfigErrorMessage("Authsignal Tenant Secret Key is not configured."));
+    }
+    return tenantSecretKey;
   }
 
   private String baseUrl(AuthenticationFlowContext context) {
     AuthenticatorConfigModel config = context.getAuthenticatorConfig();
     if (config == null) {
-      return "";
+      throw new IllegalStateException(
+          generateConfigErrorMessage("Authsignal provider config is missing."));
     }
-    return String
-        .valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_API_HOST_BASE_URL));
+    Object apiUrlObj =
+        config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_API_HOST_BASE_URL);
+    String apiUrl = (apiUrlObj != null) ? apiUrlObj.toString() : null;
+
+    if (apiUrl == null || apiUrl.isEmpty()) {
+      throw new IllegalStateException(
+          generateConfigErrorMessage("Authsignal API URL is not configured."));
+    }
+    return apiUrl;
   }
 
   private String actionCode(AuthenticationFlowContext context) {
