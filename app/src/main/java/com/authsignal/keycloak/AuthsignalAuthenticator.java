@@ -80,6 +80,7 @@ public class AuthsignalAuthenticator implements Authenticator {
       request.attributes.userAgent =
           context.getHttpRequest().getHttpHeaders().getHeaderString("User-Agent");
       request.userId = context.getUser().getId();
+      request.attributes.username = context.getUser().getUsername();
 
       try {
         CompletableFuture<TrackResponse> responseFuture = authsignalClient.track(request);
