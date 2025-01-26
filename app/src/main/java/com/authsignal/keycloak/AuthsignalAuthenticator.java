@@ -43,6 +43,10 @@ public class AuthsignalAuthenticator implements Authenticator {
 
   @Override
   public void action(AuthenticationFlowContext context) {
+    handleAuthenticationFlow(context);
+  }
+
+  private void handleAuthenticationFlow(AuthenticationFlowContext context) {
     AuthsignalClient authsignalClient = new AuthsignalClient(secretKey(context), baseUrl(context));
 
     MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
@@ -52,138 +56,143 @@ public class AuthsignalAuthenticator implements Authenticator {
     String token = formParams.getFirst("token");
     
     if (token == null) {
-      token = queryParams.getFirst("token");
+        token = queryParams.getFirst("token");
     }
 
     if (token != null && !token.isEmpty()) {
-      ValidateChallengeRequest request = new ValidateChallengeRequest();
-      request.token = token;
+        handleTokenValidation(context, authsignalClient, token);
+    } else {
+        handlePasswordAuthentication(context, authsignalClient);
+    }
+  }
 
-      try {
+  private void handleTokenValidation(AuthenticationFlowContext context, AuthsignalClient authsignalClient, String token) {
+    ValidateChallengeRequest request = new ValidateChallengeRequest();
+    request.token = token;
+
+    try {
         ValidateChallengeResponse response = authsignalClient.validateChallenge(request).get();
 
         if (response.state == UserActionState.CHALLENGE_SUCCEEDED || response.state == UserActionState.ALLOW) {
-            String userId = response.userId; // Update this based on your actual response structure
-            // Retrieve the user by ID
+            String userId = response.userId;
             UserModel user = context.getSession().users().getUserById(context.getRealm(), userId);
             if (user == null) {
                 context.failure(AuthenticationFlowError.INVALID_USER);
                 return;
             }
-
-            // Set the user in the authentication context
             context.setUser(user);
             context.success();
         } else {
-          context.failure(AuthenticationFlowError.ACCESS_DENIED);
+            context.failure(AuthenticationFlowError.ACCESS_DENIED);
         }
-      } catch (Exception e) {
+    } catch (Exception e) {
         e.printStackTrace();
         context.failure(AuthenticationFlowError.INTERNAL_ERROR);
-      }
-    } else {
-      String password = formParams.getFirst("password");
+    }
+  }
 
-      if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
-          logger.warning("Username or password is missing");
-          context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
-              .setError("Invalid username or password")
-              .createForm("login.ftl"));
-          return;
-      }
+  private void handlePasswordAuthentication(AuthenticationFlowContext context, AuthsignalClient authsignalClient) {
+    MultivaluedMap<String, String> formParams = context.getHttpRequest().getDecodedFormParameters();
+    String username = formParams.getFirst("username");
+    String password = formParams.getFirst("password");
 
-      UserModel user = context.getSession().users().getUserByUsername(context.getRealm(), username);
-
-      if (user == null) {
-          logger.warning("User not found for username: " + username);
-          context.failureChallenge(AuthenticationFlowError.INVALID_USER, context.form()
-              .setError("Invalid username or password")
-              .createForm("login.ftl"));
-          return;
-      }
-
-    // Set the user in the context and proceed
-    context.setUser(user);
-
-    CredentialInput credentialInput = UserCredentialModel.password(password);
-
-    boolean isValid = user.credentialManager().isValid(credentialInput);
-
-    if (!isValid) {
+    if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+        logger.warning("Username or password is missing");
         context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
             .setError("Invalid username or password")
             .createForm("login.ftl"));
         return;
     }
-    
+
+    UserModel user = context.getSession().users().getUserByUsername(context.getRealm(), username);
+
+    if (user == null) {
+        logger.warning("User not found for username: " + username);
+        context.failureChallenge(AuthenticationFlowError.INVALID_USER, context.form()
+            .setError("Invalid username or password")
+            .createForm("login.ftl"));
+        return;
+    }
+
+    context.setUser(user);
+
+    if (!validateCredentials(user, password)) {
+        context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
+            .setError("Invalid username or password")
+            .createForm("login.ftl"));
+        return;
+    }
+
+    handleAuthsignalTrack(context, authsignalClient);
+  }
+
+  private boolean validateCredentials(UserModel user, String password) {
+    CredentialInput credentialInput = UserCredentialModel.password(password);
+    return user.credentialManager().isValid(credentialInput);
+  }
+
+  private void handleAuthsignalTrack(AuthenticationFlowContext context, AuthsignalClient authsignalClient) {
     String sessionCode = context.generateAccessCode();
-
     URI actionUri = context.getActionUrl(sessionCode);
+    String redirectUrl = buildRedirectUrl(context, sessionCode, actionUri);
 
-    String redirectUrl =
-        context.getHttpRequest().getUri().getBaseUri().toString().replaceAll("/+$", "")
-            + "/realms/" + URLEncoder.encode(context.getRealm().getName(), StandardCharsets.UTF_8)
-            + "/authsignal-authenticator/callback" + "?kc_client_id="
-            + URLEncoder.encode(context.getAuthenticationSession().getClient().getClientId(),
-                StandardCharsets.UTF_8)
-            + "&kc_execution="
-            + URLEncoder.encode(context.getExecution().getId(), StandardCharsets.UTF_8)
-            + "&kc_tab_id="
-            + URLEncoder.encode(context.getAuthenticationSession().getTabId(),
-                StandardCharsets.UTF_8)
-            + "&kc_session_code=" + URLEncoder.encode(sessionCode, StandardCharsets.UTF_8)
-            + "&kc_action_url=" + URLEncoder.encode(actionUri.toString(), StandardCharsets.UTF_8);
+    TrackRequest request = createTrackRequest(context, redirectUrl);
 
+    try {
+        TrackResponse response = authsignalClient.track(request).get();
+        handleTrackResponse(context, response);
+    } catch (Exception e) {
+        e.printStackTrace();
+        context.failure(AuthenticationFlowError.INTERNAL_ERROR);
+    }
+  }
+
+  private String buildRedirectUrl(AuthenticationFlowContext context, String sessionCode, URI actionUri) {
+    return context.getHttpRequest().getUri().getBaseUri().toString().replaceAll("/+$", "")
+        + "/realms/" + URLEncoder.encode(context.getRealm().getName(), StandardCharsets.UTF_8)
+        + "/authsignal-authenticator/callback" + "?kc_client_id="
+        + URLEncoder.encode(context.getAuthenticationSession().getClient().getClientId(), StandardCharsets.UTF_8)
+        + "&kc_execution=" + URLEncoder.encode(context.getExecution().getId(), StandardCharsets.UTF_8)
+        + "&kc_tab_id=" + URLEncoder.encode(context.getAuthenticationSession().getTabId(), StandardCharsets.UTF_8)
+        + "&kc_session_code=" + URLEncoder.encode(sessionCode, StandardCharsets.UTF_8)
+        + "&kc_action_url=" + URLEncoder.encode(actionUri.toString(), StandardCharsets.UTF_8);
+  }
+
+  private TrackRequest createTrackRequest(AuthenticationFlowContext context, String redirectUrl) {
     TrackRequest request = new TrackRequest();
     request.action = actionCode(context);
-
     request.attributes = new TrackAttributes();
     request.attributes.redirectUrl = redirectUrl;
     request.attributes.ipAddress = context.getConnection().getRemoteAddr();
-    request.attributes.userAgent =
-    context.getHttpRequest().getHttpHeaders().getHeaderString("User-Agent");
+    request.attributes.userAgent = context.getHttpRequest().getHttpHeaders().getHeaderString("User-Agent");
     request.userId = context.getUser().getId();
     request.attributes.username = context.getUser().getUsername();
+    return request;
+  }
 
-    try {
-      CompletableFuture<TrackResponse> responseFuture = authsignalClient.track(request);
+  private void handleTrackResponse(AuthenticationFlowContext context, TrackResponse response) {
+    String url = response.url;
+    Response responseRedirect = Response.status(Response.Status.FOUND).location(URI.create(url)).build();
+    boolean isEnrolled = response.isEnrolled;
 
-      TrackResponse response = responseFuture.get();
-
-      String url = response.url;
-
-      Response responseRedirect =
-          Response.status(Response.Status.FOUND).location(URI.create(url)).build();
-
-      boolean isEnrolled = response.isEnrolled;
-
-      // If the user is not enrolled (has no authenticators) and enrollment by default
-      // is enabled,
-      // display the challenge page to allow the user to enroll.
-      if (enrolByDefault(context) && !isEnrolled) {
+    if (enrolByDefault(context) && !isEnrolled) {
         if (response.state == UserActionState.BLOCK) {
-          context.failure(AuthenticationFlowError.ACCESS_DENIED);
+            context.failure(AuthenticationFlowError.ACCESS_DENIED);
+            return;
         }
         context.challenge(responseRedirect);
-      } else {
+    } else {
         if (response.state == UserActionState.CHALLENGE_REQUIRED) {
-          context.challenge(responseRedirect);
+            context.challenge(responseRedirect);
         } else if (response.state == UserActionState.BLOCK) {
-          context.failure(AuthenticationFlowError.ACCESS_DENIED);
+            context.failure(AuthenticationFlowError.ACCESS_DENIED);
         } else if (response.state == UserActionState.ALLOW) {
-          context.success();
+            context.success();
         } else {
-          context.failure(AuthenticationFlowError.ACCESS_DENIED);
+            context.failure(AuthenticationFlowError.ACCESS_DENIED);
         }
-      }
-
-    } catch (Exception e) {
-      e.printStackTrace();
-      context.failure(AuthenticationFlowError.INTERNAL_ERROR);
     }
   }
-    // No-op
-}
 
   @Override
   public boolean requiresUser() {
