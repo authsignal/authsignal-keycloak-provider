@@ -43,44 +43,30 @@ public class AuthsignalAuthenticator implements Authenticator {
 
   @Override
   public void action(AuthenticationFlowContext context) {
-    logger.info("Action method called");
-
-
     AuthsignalClient authsignalClient = new AuthsignalClient(secretKey(context), baseUrl(context));
 
     MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
     MultivaluedMap<String, String> formParams = context.getHttpRequest().getDecodedFormParameters();
 
     String username = formParams.getFirst("username");
-    logger.info("username from form parameters: " + username);
     String token = formParams.getFirst("token");
-    logger.info("Token from form parameters: " + token);
     
     if (token == null) {
-      logger.info("token is null");
       token = queryParams.getFirst("token");
-      logger.info("second token: " + token);
     }
-
-    logger.info("token: " + token);
 
     if (token != null && !token.isEmpty()) {
       ValidateChallengeRequest request = new ValidateChallengeRequest();
       request.token = token;
 
       try {
-        logger.info("calling validateChallenge method ");
         ValidateChallengeResponse response = authsignalClient.validateChallenge(request).get();
-        logger.info("validateChallenge method called");
-        logger.info("validateChallenge response: " + response);
+
         if (response.state == UserActionState.CHALLENGE_SUCCEEDED || response.state == UserActionState.ALLOW) {
             String userId = response.userId; // Update this based on your actual response structure
-            logger.info("User ID retrieved from challenge: " + userId);
-
             // Retrieve the user by ID
             UserModel user = context.getSession().users().getUserById(context.getRealm(), userId);
             if (user == null) {
-                logger.info("User not found in Keycloak for ID: " + userId);
                 context.failure(AuthenticationFlowError.INVALID_USER);
                 return;
             }
@@ -96,10 +82,7 @@ public class AuthsignalAuthenticator implements Authenticator {
         context.failure(AuthenticationFlowError.INTERNAL_ERROR);
       }
     } else {
-      String password = formParams.getFirst("password"); // Assuming the password is passed in the form
-
-      logger.info("username: " + username);
-      logger.info("password: " + password);
+      String password = formParams.getFirst("password");
 
       if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
           logger.warning("Username or password is missing");
@@ -109,10 +92,7 @@ public class AuthsignalAuthenticator implements Authenticator {
           return;
       }
 
-      logger.info("Attempting to retrieve user by username: " + username);
       UserModel user = context.getSession().users().getUserByUsername(context.getRealm(), username);
-      
-      logger.info("user!: " + user);
 
       if (user == null) {
           logger.warning("User not found for username: " + username);
@@ -121,17 +101,6 @@ public class AuthsignalAuthenticator implements Authenticator {
               .createForm("login.ftl"));
           return;
       }
-
-      // boolean isValid = user.credentialManager()
-      //     .isValid(context.getRealm(), UserCredentialModel.password(password));
-
-      // if (!isValid) {
-      //     logger.warning("Invalid password for username: " + username);
-      //     context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
-      //         .setError("Invalid username or password")
-      //         .createForm("login.ftl"));
-      //     return;
-      // }
 
     // Set the user in the context and proceed
     context.setUser(user);
@@ -148,8 +117,6 @@ public class AuthsignalAuthenticator implements Authenticator {
     }
     
     String sessionCode = context.generateAccessCode();
-
-    logger.info("sessionCode: " + sessionCode);
 
     URI actionUri = context.getActionUrl(sessionCode);
 
@@ -183,8 +150,6 @@ public class AuthsignalAuthenticator implements Authenticator {
 
       TrackResponse response = responseFuture.get();
 
-      logger.info("response!: " + response.state);
-
       String url = response.url;
 
       Response responseRedirect =
@@ -199,7 +164,6 @@ public class AuthsignalAuthenticator implements Authenticator {
         if (response.state == UserActionState.BLOCK) {
           context.failure(AuthenticationFlowError.ACCESS_DENIED);
         }
-        logger.info("responseRedirect!");
         context.challenge(responseRedirect);
       } else {
         if (response.state == UserActionState.CHALLENGE_REQUIRED) {
@@ -207,7 +171,6 @@ public class AuthsignalAuthenticator implements Authenticator {
         } else if (response.state == UserActionState.BLOCK) {
           context.failure(AuthenticationFlowError.ACCESS_DENIED);
         } else if (response.state == UserActionState.ALLOW) {
-          logger.info("ALLOW!");
           context.success();
         } else {
           context.failure(AuthenticationFlowError.ACCESS_DENIED);
