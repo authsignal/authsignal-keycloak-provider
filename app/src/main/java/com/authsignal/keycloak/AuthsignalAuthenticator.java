@@ -21,6 +21,8 @@ import org.keycloak.models.AuthenticatorConfigModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
+import org.keycloak.models.UserCredentialModel;
+import org.keycloak.credential.CredentialInput;
 
 /** Authsignal Authenticator. */
 public class AuthsignalAuthenticator implements Authenticator {
@@ -134,6 +136,17 @@ public class AuthsignalAuthenticator implements Authenticator {
     // Set the user in the context and proceed
     context.setUser(user);
 
+    CredentialInput credentialInput = UserCredentialModel.password(password);
+
+    boolean isValid = user.credentialManager().isValid(credentialInput);
+
+    if (!isValid) {
+        context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
+            .setError("Invalid username or password")
+            .createForm("login.ftl"));
+        return;
+    }
+    
     String sessionCode = context.generateAccessCode();
 
     logger.info("sessionCode: " + sessionCode);
