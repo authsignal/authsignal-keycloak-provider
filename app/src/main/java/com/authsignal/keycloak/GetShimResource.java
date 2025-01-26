@@ -75,7 +75,7 @@ public class GetShimResource {
     String redirect =
         "<html><body onload=\"document.forms[0].submit()\"><form id=\"form1\" action=\""
             + kcActionUrl
-            + "\" method=\"post\"><input type=\"hidden\" name=\"authenticationExecution\" value=\""
+            + "\" method=\"post\"><input type=\"hidden\" name=\"actionExecution\" value=\""
             + authenticationExecution
             + "\"><noscript><input type=\"submit\" value=\"Continue\"></noscript></form>"
             + "</body></html>";
