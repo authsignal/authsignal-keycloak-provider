@@ -30,29 +30,62 @@ public class AuthsignalAuthenticator implements Authenticator {
 
   @Override
   public void authenticate(AuthenticationFlowContext context) {
+    logger.info("authenticate method called");
+    Response challenge = context.form()
+        .setAttribute("message", "Please enter your token")
+        .createForm("login.ftl");
+
+    context.challenge(challenge);
+    return;
+  }
+
+  @Override
+  public void action(AuthenticationFlowContext context) {
+    logger.info("Action method called");
+
+
     AuthsignalClient authsignalClient = new AuthsignalClient(secretKey(context), baseUrl(context));
 
     MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
     MultivaluedMap<String, String> formParams = context.getHttpRequest().getDecodedFormParameters();
 
-    String token = queryParams.getFirst("token");
+    String username = formParams.getFirst("username");
+    logger.info("username from form parameters: " + username);
+    String token = formParams.getFirst("token");
+    logger.info("Token from form parameters: " + token);
+    
     if (token == null) {
-      token = formParams.getFirst("token");
+      logger.info("token is null");
+      token = queryParams.getFirst("token");
+      logger.info("second token: " + token);
     }
-    String userId = context.getUser().getId();
-    if (userId == null) {
-      userId = formParams.getFirst("userId");
-    }
+
+    logger.info("token: " + token);
 
     if (token != null && !token.isEmpty()) {
       ValidateChallengeRequest request = new ValidateChallengeRequest();
       request.token = token;
-      request.userId = userId;
 
       try {
+        logger.info("calling validateChallenge method ");
         ValidateChallengeResponse response = authsignalClient.validateChallenge(request).get();
-        if (response.state == UserActionState.CHALLENGE_SUCCEEDED) {
-          context.success();
+        logger.info("validateChallenge method called");
+        logger.info("validateChallenge response: " + response);
+        if (response.state == UserActionState.CHALLENGE_SUCCEEDED || response.state == UserActionState.ALLOW) {
+            String userId = response.userId; // Update this based on your actual response structure
+            logger.info("User ID retrieved from challenge: " + userId);
+
+            // Retrieve the user by ID
+            UserModel user = context.getSession().users().getUserById(context.getRealm(), userId);
+            if (user == null) {
+                logger.info("User not found in Keycloak for ID: " + userId);
+                context.failure(AuthenticationFlowError.INVALID_USER);
+                return;
+            }
+
+            // Set the user in the authentication context
+            context.setUser(user);
+            context.success();
         } else {
           context.failure(AuthenticationFlowError.ACCESS_DENIED);
         }
@@ -61,84 +94,125 @@ public class AuthsignalAuthenticator implements Authenticator {
         context.failure(AuthenticationFlowError.INTERNAL_ERROR);
       }
     } else {
-      String sessionCode = context.generateAccessCode();
+      String password = formParams.getFirst("password"); // Assuming the password is passed in the form
 
-      URI actionUri = context.getActionUrl(sessionCode);
+      logger.info("username: " + username);
+      logger.info("password: " + password);
 
-      String redirectUrl =
-          context.getHttpRequest().getUri().getBaseUri().toString().replaceAll("/+$", "")
-              + "/realms/" + URLEncoder.encode(context.getRealm().getName(), StandardCharsets.UTF_8)
-              + "/authsignal-authenticator/callback" + "?kc_client_id="
-              + URLEncoder.encode(context.getAuthenticationSession().getClient().getClientId(),
-                  StandardCharsets.UTF_8)
-              + "&kc_execution="
-              + URLEncoder.encode(context.getExecution().getId(), StandardCharsets.UTF_8)
-              + "&kc_tab_id="
-              + URLEncoder.encode(context.getAuthenticationSession().getTabId(),
-                  StandardCharsets.UTF_8)
-              + "&kc_session_code=" + URLEncoder.encode(sessionCode, StandardCharsets.UTF_8)
-              + "&kc_action_url=" + URLEncoder.encode(actionUri.toString(), StandardCharsets.UTF_8);
-
-      TrackRequest request = new TrackRequest();
-      request.action = actionCode(context);
-
-      request.attributes = new TrackAttributes();
-      request.attributes.redirectUrl = redirectUrl;
-      request.attributes.ipAddress = context.getConnection().getRemoteAddr();
-      request.attributes.userAgent =
-          context.getHttpRequest().getHttpHeaders().getHeaderString("User-Agent");
-      request.userId = context.getUser().getId();
-      request.attributes.username = context.getUser().getUsername();
-
-      try {
-        CompletableFuture<TrackResponse> responseFuture = authsignalClient.track(request);
-
-        TrackResponse response = responseFuture.get();
-
-        String url = response.url;
-
-        Response responseRedirect =
-            Response.status(Response.Status.FOUND).location(URI.create(url)).build();
-
-        boolean isEnrolled = response.isEnrolled;
-
-        // If the user is not enrolled (has no authenticators) and enrollment by default
-        // is enabled,
-        // display the challenge page to allow the user to enroll.
-        if (enrolByDefault(context) && !isEnrolled) {
-          if (response.state == UserActionState.BLOCK) {
-            context.failure(AuthenticationFlowError.ACCESS_DENIED);
-          }
-          context.challenge(responseRedirect);
-        } else {
-          if (response.state == UserActionState.CHALLENGE_REQUIRED) {
-            context.challenge(responseRedirect);
-          } else if (response.state == UserActionState.BLOCK) {
-            context.failure(AuthenticationFlowError.ACCESS_DENIED);
-          } else if (response.state == UserActionState.ALLOW) {
-            context.success();
-          } else {
-            context.failure(AuthenticationFlowError.ACCESS_DENIED);
-          }
-        }
-
-      } catch (Exception e) {
-        e.printStackTrace();
-        context.failure(AuthenticationFlowError.INTERNAL_ERROR);
+      if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+          logger.warning("Username or password is missing");
+          context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
+              .setError("Invalid username or password")
+              .createForm("login.ftl"));
+          return;
       }
+
+      logger.info("Attempting to retrieve user by username: " + username);
+      UserModel user = context.getSession().users().getUserByUsername(context.getRealm(), username);
+      
+      logger.info("user!: " + user);
+
+      if (user == null) {
+          logger.warning("User not found for username: " + username);
+          context.failureChallenge(AuthenticationFlowError.INVALID_USER, context.form()
+              .setError("Invalid username or password")
+              .createForm("login.ftl"));
+          return;
+      }
+
+      // boolean isValid = user.credentialManager()
+      //     .isValid(context.getRealm(), UserCredentialModel.password(password));
+
+      // if (!isValid) {
+      //     logger.warning("Invalid password for username: " + username);
+      //     context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
+      //         .setError("Invalid username or password")
+      //         .createForm("login.ftl"));
+      //     return;
+      // }
+
+    // Set the user in the context and proceed
+    context.setUser(user);
+
+    String sessionCode = context.generateAccessCode();
+
+    logger.info("sessionCode: " + sessionCode);
+
+    URI actionUri = context.getActionUrl(sessionCode);
+
+    String redirectUrl =
+        context.getHttpRequest().getUri().getBaseUri().toString().replaceAll("/+$", "")
+            + "/realms/" + URLEncoder.encode(context.getRealm().getName(), StandardCharsets.UTF_8)
+            + "/authsignal-authenticator/callback" + "?kc_client_id="
+            + URLEncoder.encode(context.getAuthenticationSession().getClient().getClientId(),
+                StandardCharsets.UTF_8)
+            + "&kc_execution="
+            + URLEncoder.encode(context.getExecution().getId(), StandardCharsets.UTF_8)
+            + "&kc_tab_id="
+            + URLEncoder.encode(context.getAuthenticationSession().getTabId(),
+                StandardCharsets.UTF_8)
+            + "&kc_session_code=" + URLEncoder.encode(sessionCode, StandardCharsets.UTF_8)
+            + "&kc_action_url=" + URLEncoder.encode(actionUri.toString(), StandardCharsets.UTF_8);
+
+    TrackRequest request = new TrackRequest();
+    request.action = actionCode(context);
+
+    request.attributes = new TrackAttributes();
+    request.attributes.redirectUrl = redirectUrl;
+    request.attributes.ipAddress = context.getConnection().getRemoteAddr();
+    request.attributes.userAgent =
+    context.getHttpRequest().getHttpHeaders().getHeaderString("User-Agent");
+    request.userId = context.getUser().getId();
+    request.attributes.username = context.getUser().getUsername();
+
+    try {
+      CompletableFuture<TrackResponse> responseFuture = authsignalClient.track(request);
+
+      TrackResponse response = responseFuture.get();
+
+      logger.info("response!: " + response.state);
+
+      String url = response.url;
+
+      Response responseRedirect =
+          Response.status(Response.Status.FOUND).location(URI.create(url)).build();
+
+      boolean isEnrolled = response.isEnrolled;
+
+      // If the user is not enrolled (has no authenticators) and enrollment by default
+      // is enabled,
+      // display the challenge page to allow the user to enroll.
+      if (enrolByDefault(context) && !isEnrolled) {
+        if (response.state == UserActionState.BLOCK) {
+          context.failure(AuthenticationFlowError.ACCESS_DENIED);
+        }
+        logger.info("responseRedirect!");
+        context.challenge(responseRedirect);
+      } else {
+        if (response.state == UserActionState.CHALLENGE_REQUIRED) {
+          context.challenge(responseRedirect);
+        } else if (response.state == UserActionState.BLOCK) {
+          context.failure(AuthenticationFlowError.ACCESS_DENIED);
+        } else if (response.state == UserActionState.ALLOW) {
+          logger.info("ALLOW!");
+          context.success();
+        } else {
+          context.failure(AuthenticationFlowError.ACCESS_DENIED);
+        }
+      }
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      context.failure(AuthenticationFlowError.INTERNAL_ERROR);
     }
   }
-
-  @Override
-  public void action(AuthenticationFlowContext context) {
-    logger.info("Action method called");
     // No-op
-  }
+}
 
   @Override
   public boolean requiresUser() {
     logger.info("requiresUser method called");
-    return true;
+    return false;
   }
 
   @Override
