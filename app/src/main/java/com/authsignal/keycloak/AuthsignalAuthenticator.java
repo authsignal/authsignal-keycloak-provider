@@ -30,29 +30,51 @@ public class AuthsignalAuthenticator implements Authenticator {
 
   public static final AuthsignalAuthenticator SINGLETON = new AuthsignalAuthenticator();
 
+  private AuthsignalClient authsignalClient;
+
+  private AuthsignalClient getAuthsignalClient(AuthenticationFlowContext context) {
+    if (authsignalClient == null) {
+      authsignalClient = new AuthsignalClient(secretKey(context), baseUrl(context));
+    }
+    return authsignalClient;
+  }
+
   @Override
   public void authenticate(AuthenticationFlowContext context) {
     logger.info("authenticate method called");
-    Response challenge = context.form()
-        .setAttribute("message", "Please enter your token")
-        .createForm("login.ftl");
 
-    context.challenge(challenge);
-    return;
+    AuthenticatorConfigModel config = context.getAuthenticatorConfig();
+    boolean isPasskeyAutofill = false;
+    
+    if (config != null) {
+        Object passkeyAutofillObj = config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_PASSKEY_AUTOFILL);
+        isPasskeyAutofill = passkeyAutofillObj != null && Boolean.parseBoolean(passkeyAutofillObj.toString());
+    }
+
+    if (isPasskeyAutofill) {
+        Response challenge = context.form()
+            .setAttribute("message", "Please enter your token")
+            .createForm("login.ftl");
+        context.challenge(challenge);
+        return;
+    } else {
+        handleAuthenticationFlow(context);
+    }
   }
 
   @Override
   public void action(AuthenticationFlowContext context) {
+    logger.info("action method called");
+    handlePasswordAuthentication(context);
     handleAuthenticationFlow(context);
   }
 
   private void handleAuthenticationFlow(AuthenticationFlowContext context) {
-    AuthsignalClient authsignalClient = new AuthsignalClient(secretKey(context), baseUrl(context));
+    AuthsignalClient client = getAuthsignalClient(context);
 
     MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
     MultivaluedMap<String, String> formParams = context.getHttpRequest().getDecodedFormParameters();
 
-    String username = formParams.getFirst("username");
     String token = formParams.getFirst("token");
     
     if (token == null) {
@@ -60,13 +82,14 @@ public class AuthsignalAuthenticator implements Authenticator {
     }
 
     if (token != null && !token.isEmpty()) {
-        handleTokenValidation(context, authsignalClient, token);
+        handleTokenValidation(context, client, token);
     } else {
-        handlePasswordAuthentication(context, authsignalClient);
+        handleAuthsignalTrack(context, client);
     }
   }
 
   private void handleTokenValidation(AuthenticationFlowContext context, AuthsignalClient authsignalClient, String token) {
+    logger.info("handleTokenValidation method called");
     ValidateChallengeRequest request = new ValidateChallengeRequest();
     request.token = token;
 
@@ -91,7 +114,8 @@ public class AuthsignalAuthenticator implements Authenticator {
     }
   }
 
-  private void handlePasswordAuthentication(AuthenticationFlowContext context, AuthsignalClient authsignalClient) {
+  private void handlePasswordAuthentication(AuthenticationFlowContext context) {
+    AuthsignalClient client = getAuthsignalClient(context);
     MultivaluedMap<String, String> formParams = context.getHttpRequest().getDecodedFormParameters();
     String username = formParams.getFirst("username");
     String password = formParams.getFirst("password");
@@ -122,8 +146,6 @@ public class AuthsignalAuthenticator implements Authenticator {
             .createForm("login.ftl"));
         return;
     }
-
-    handleAuthsignalTrack(context, authsignalClient);
   }
 
   private boolean validateCredentials(UserModel user, String password) {

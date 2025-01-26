@@ -24,6 +24,7 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
   public static final String PROP_API_HOST_BASE_URL = "authsignal.baseUrl";
   public static final String PROP_ACTION_CODE = "authsignal.actionCode";
   public static final String PROP_ENROL_BY_DEFAULT = "authsignal.enrolByDefault";
+  public static final String PROP_PASSKEY_AUTOFILL = "passkey-autofill";
 
   private static AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES =
       {AuthenticationExecutionModel.Requirement.REQUIRED,
@@ -76,6 +77,14 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
     enrolByDefault.setHelpText("Optional: Auto enroll user if no authenticators "
         + "are available i.e. the user is not enrolled. Defaults to true.");
     configProperties.add(enrolByDefault);
+
+    ProviderConfigProperty passkeyAutofill = new ProviderConfigProperty();
+    passkeyAutofill.setName(PROP_PASSKEY_AUTOFILL);
+    passkeyAutofill.setLabel("Enable Passkey Autofill");
+    passkeyAutofill.setType(ProviderConfigProperty.BOOLEAN_TYPE);
+    passkeyAutofill.setDefaultValue(false);
+    passkeyAutofill.setHelpText("Optional: Enable passkey autofill functionality. Defaults to false.");
+    configProperties.add(passkeyAutofill);
   }
 
   @Override
