@@ -41,8 +41,6 @@ public class AuthsignalAuthenticator implements Authenticator {
 
   @Override
   public void authenticate(AuthenticationFlowContext context) {
-    logger.info("authenticate method called");
-
     AuthenticatorConfigModel config = context.getAuthenticatorConfig();
     boolean isPasskeyAutofill = false;
     
@@ -64,8 +62,6 @@ public class AuthsignalAuthenticator implements Authenticator {
 
   @Override
   public void action(AuthenticationFlowContext context) {
-    logger.info("action method called!");
-    
     handleAuthenticationFlow(context);
   }
 
@@ -86,7 +82,7 @@ public class AuthsignalAuthenticator implements Authenticator {
     UserModel user = context.getSession().users().getUserByUsername(context.getRealm(), username);
 
     if (user == null) {
-        logger.warning("User not found for username: " + username);
+        logger.warning("User not found);
         context.failureChallenge(AuthenticationFlowError.INVALID_USER, context.form()
             .setError("Invalid username or password")
             .createForm("login.ftl"));
@@ -129,7 +125,6 @@ public class AuthsignalAuthenticator implements Authenticator {
   }
 
   private void handleTokenValidation(AuthenticationFlowContext context, AuthsignalClient authsignalClient, String token) {
-    logger.info("handleTokenValidation method called");
     ValidateChallengeRequest request = new ValidateChallengeRequest();
     request.token = token;
 
@@ -224,25 +219,21 @@ public class AuthsignalAuthenticator implements Authenticator {
 
   @Override
   public boolean requiresUser() {
-    logger.info("requiresUser method called");
     return false;
   }
 
   @Override
   public boolean configuredFor(KeycloakSession session, RealmModel realm, UserModel user) {
-    logger.info("configuredFor method called");
     return true;
   }
 
   @Override
   public void setRequiredActions(KeycloakSession session, RealmModel realm, UserModel user) {
-    logger.info("setRequiredActions method called");
     // No required actions
   }
 
   @Override
   public void close() {
-    logger.info("close method called");
     // Cleanup if needed
   }
 
