@@ -41,8 +41,6 @@ public class AuthsignalAuthenticator implements Authenticator {
 
   @Override
   public void authenticate(AuthenticationFlowContext context) {
-    logger.info("authenticate method called");
-
     AuthenticatorConfigModel config = context.getAuthenticatorConfig();
     boolean isPasskeyAutofill = false;
     
@@ -64,9 +62,43 @@ public class AuthsignalAuthenticator implements Authenticator {
 
   @Override
   public void action(AuthenticationFlowContext context) {
-    logger.info("action method called");
-    handlePasswordAuthentication(context);
     handleAuthenticationFlow(context);
+  }
+
+  private boolean handlePasswordAuthentication(AuthenticationFlowContext context) {
+    AuthsignalClient client = getAuthsignalClient(context);
+    MultivaluedMap<String, String> formParams = context.getHttpRequest().getDecodedFormParameters();
+    String username = formParams.getFirst("username");
+    String password = formParams.getFirst("password");
+
+    if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+        logger.warning("Username or password is missing");
+        context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
+            .setError("Invalid username or password")
+            .createForm("login.ftl"));
+        return false;
+    }
+
+    UserModel user = context.getSession().users().getUserByUsername(context.getRealm(), username);
+
+    if (user == null) {
+        logger.warning("User not found");
+        context.failureChallenge(AuthenticationFlowError.INVALID_USER, context.form()
+            .setError("Invalid username or password")
+            .createForm("login.ftl"));
+        return false;
+    }
+
+    context.setUser(user);
+
+    if (!validateCredentials(user, password)) {
+        context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
+            .setError("Invalid username or password")
+            .createForm("login.ftl"));
+        return false;
+    }
+    
+    return true;
   }
 
   private void handleAuthenticationFlow(AuthenticationFlowContext context) {
@@ -84,12 +116,15 @@ public class AuthsignalAuthenticator implements Authenticator {
     if (token != null && !token.isEmpty()) {
         handleTokenValidation(context, client, token);
     } else {
+        if (!handlePasswordAuthentication(context)) {
+            // If password authentication fails, return early
+            return;
+        }
         handleAuthsignalTrack(context, client);
     }
   }
 
   private void handleTokenValidation(AuthenticationFlowContext context, AuthsignalClient authsignalClient, String token) {
-    logger.info("handleTokenValidation method called");
     ValidateChallengeRequest request = new ValidateChallengeRequest();
     request.token = token;
 
@@ -111,40 +146,6 @@ public class AuthsignalAuthenticator implements Authenticator {
     } catch (Exception e) {
         e.printStackTrace();
         context.failure(AuthenticationFlowError.INTERNAL_ERROR);
-    }
-  }
-
-  private void handlePasswordAuthentication(AuthenticationFlowContext context) {
-    AuthsignalClient client = getAuthsignalClient(context);
-    MultivaluedMap<String, String> formParams = context.getHttpRequest().getDecodedFormParameters();
-    String username = formParams.getFirst("username");
-    String password = formParams.getFirst("password");
-
-    if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
-        logger.warning("Username or password is missing");
-        context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
-            .setError("Invalid username or password")
-            .createForm("login.ftl"));
-        return;
-    }
-
-    UserModel user = context.getSession().users().getUserByUsername(context.getRealm(), username);
-
-    if (user == null) {
-        logger.warning("User not found for username: " + username);
-        context.failureChallenge(AuthenticationFlowError.INVALID_USER, context.form()
-            .setError("Invalid username or password")
-            .createForm("login.ftl"));
-        return;
-    }
-
-    context.setUser(user);
-
-    if (!validateCredentials(user, password)) {
-        context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
-            .setError("Invalid username or password")
-            .createForm("login.ftl"));
-        return;
     }
   }
 
@@ -218,25 +219,21 @@ public class AuthsignalAuthenticator implements Authenticator {
 
   @Override
   public boolean requiresUser() {
-    logger.info("requiresUser method called");
     return false;
   }
 
   @Override
   public boolean configuredFor(KeycloakSession session, RealmModel realm, UserModel user) {
-    logger.info("configuredFor method called");
     return true;
   }
 
   @Override
   public void setRequiredActions(KeycloakSession session, RealmModel realm, UserModel user) {
-    logger.info("setRequiredActions method called");
     // No required actions
   }
 
   @Override
   public void close() {
-    logger.info("close method called");
     // Cleanup if needed
   }
 
