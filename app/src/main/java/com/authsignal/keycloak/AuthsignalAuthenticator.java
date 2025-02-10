@@ -64,15 +64,8 @@ public class AuthsignalAuthenticator implements Authenticator {
 
   @Override
   public void action(AuthenticationFlowContext context) {
-    logger.info("action method called");
+    logger.info("action method called!");
     
-    // First handle password authentication
-    if (!handlePasswordAuthentication(context)) {
-        // If password authentication fails, return early
-        return;
-    }
-    
-    // Only proceed to Authsignal flow if password was correct
     handleAuthenticationFlow(context);
   }
 
@@ -127,6 +120,10 @@ public class AuthsignalAuthenticator implements Authenticator {
     if (token != null && !token.isEmpty()) {
         handleTokenValidation(context, client, token);
     } else {
+        if (!handlePasswordAuthentication(context)) {
+            // If password authentication fails, return early
+            return;
+        }
         handleAuthsignalTrack(context, client);
     }
   }
