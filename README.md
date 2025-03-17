@@ -1,3 +1,5 @@
+<img width="1070" alt="Authsignal" src="https://raw.githubusercontent.com/authsignal/authsignal-keycloak-providers/main/.github/images/authsignal.png">
+
 # Authsignal Key Cloak Authenticator - Enable MFA and Passkeys for Keycloak
 
 Authenticator for [Keycloak](https://github.com/keycloak/keycloak) that uses Authsignal's [Pre-built UI](https://docs.authsignal.com/scenarios/launching-the-prebuilt-ui) to challenge the user for MFA/Passwordless/Passkeys as part of a Keycloak login flow.
