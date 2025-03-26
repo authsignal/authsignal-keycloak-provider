@@ -82,6 +82,10 @@ public class AuthsignalAuthenticator implements Authenticator {
     UserModel user = context.getSession().users().getUserByUsername(context.getRealm(), username);
 
     if (user == null) {
+        user = context.getSession().users().getUserByEmail(context.getRealm(), username);
+    }
+
+    if (user == null) {
         logger.warning("User not found");
         context.failureChallenge(AuthenticationFlowError.INVALID_USER, context.form()
             .setError("Invalid username or password")
