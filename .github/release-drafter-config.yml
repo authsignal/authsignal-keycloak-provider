@@ -65,7 +65,7 @@ autolabeler:
       - '/feature\/.+/'
   - label: "dependencies"
     files:
-      - "build.gradle"
+      - "app/build.gradle"
 
 template: |
   ## Changes in Release v$RESOLVED_VERSION
