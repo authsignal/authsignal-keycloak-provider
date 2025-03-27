@@ -2,7 +2,7 @@ name: "[Main] - Build Release"
 
 on:
   release:
-    types: [created]
+    types: [published]
 
 permissions: write-all
 
