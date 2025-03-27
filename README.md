@@ -1,4 +1,4 @@
-<img width="1070" alt="Authsignal" src="https://raw.githubusercontent.com/authsignal/authsignal-keycloak-providers/main/.github/images/authsignal.png">
+<img width="1070" alt="Authsignal" src="https://raw.githubusercontent.com/authsignal/authsignal-keycloak-provider/main/.github/images/authsignal.png">
 
 # Authsignal Key Cloak Authenticator - Enable MFA and Passkeys for Keycloak
 
