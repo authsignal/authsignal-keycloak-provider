@@ -71,18 +71,13 @@ public class AuthsignalAuthenticator implements Authenticator {
     String username = formParams.getFirst("username");
     String password = formParams.getFirst("password");
 
-    if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
-        logger.warning("Username or password is missing");
-        context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
-            .setError("Invalid username or password")
-            .createForm("login.ftl"));
-        return false;
-    }
-
-    UserModel user = context.getSession().users().getUserByUsername(context.getRealm(), username);
-
-    if (user == null) {
-        user = context.getSession().users().getUserByEmail(context.getRealm(), username);
+    // Use user from context if already set (e.g., after brokered login)
+    UserModel user = context.getUser();
+    if (user == null && username != null && !username.isEmpty()) {
+        user = context.getSession().users().getUserByUsername(context.getRealm(), username);
+        if (user == null) {
+            user = context.getSession().users().getUserByEmail(context.getRealm(), username);
+        }
     }
 
     if (user == null) {
