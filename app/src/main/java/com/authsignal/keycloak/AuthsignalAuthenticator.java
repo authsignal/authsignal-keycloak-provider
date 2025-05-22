@@ -71,19 +71,21 @@ public class AuthsignalAuthenticator implements Authenticator {
     String username = formParams.getFirst("username");
     String password = formParams.getFirst("password");
 
-    if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
-        logger.warning("Username or password is missing");
-        context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
-            .setError("Invalid username or password")
-            .createForm("login.ftl"));
-        return false;
+    // Use user from context if already set (e.g., after brokered login)
+    UserModel user = context.getUser();
+    if (user == null && username != null && !username.isEmpty()) {
+        user = context.getSession().users().getUserByUsername(context.getRealm(), username);
+        if (user == null) {
+            user = context.getSession().users().getUserByEmail(context.getRealm(), username);
+        }
     }
 
-    UserModel user = context.getSession().users().getUserByUsername(context.getRealm(), username);
-
-    if (user == null) {
-        user = context.getSession().users().getUserByEmail(context.getRealm(), username);
+    // Always set the login attribute for the template
+    String prefilledUsername = username;
+    if ((prefilledUsername == null || prefilledUsername.isEmpty()) && user != null) {
+        prefilledUsername = user.getUsername();
     }
+    context.form().setAttribute("login", new LoginBean(prefilledUsername));
 
     if (user == null) {
         logger.warning("User not found");
@@ -94,6 +96,16 @@ public class AuthsignalAuthenticator implements Authenticator {
     }
 
     context.setUser(user);
+
+    // If password is required, check it; otherwise, skip if already authenticated
+    if (password == null || password.isEmpty()) {
+        // If your flow requires password, show error or prompt for password only
+        logger.warning("Password is missing");
+        context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
+            .setError("Invalid username or password")
+            .createForm("login.ftl"));
+        return false;
+    }
 
     if (!validateCredentials(user, password)) {
         context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
@@ -302,4 +314,10 @@ public class AuthsignalAuthenticator implements Authenticator {
         .valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_ENROL_BY_DEFAULT));
     return enrolByDefault;
   }
+}
+
+class LoginBean {
+    private final String username;
+    public LoginBean(String username) { this.username = username; }
+    public String getUsername() { return username; }
 }
