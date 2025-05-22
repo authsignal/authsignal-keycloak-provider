@@ -80,13 +80,6 @@ public class AuthsignalAuthenticator implements Authenticator {
         }
     }
 
-    // Always set the login attribute for the template
-    String prefilledUsername = username;
-    if ((prefilledUsername == null || prefilledUsername.isEmpty()) && user != null) {
-        prefilledUsername = user.getUsername();
-    }
-    context.form().setAttribute("login", new LoginBean(prefilledUsername));
-
     if (user == null) {
         logger.warning("User not found");
         context.failureChallenge(AuthenticationFlowError.INVALID_USER, context.form()
@@ -96,16 +89,6 @@ public class AuthsignalAuthenticator implements Authenticator {
     }
 
     context.setUser(user);
-
-    // If password is required, check it; otherwise, skip if already authenticated
-    if (password == null || password.isEmpty()) {
-        // If your flow requires password, show error or prompt for password only
-        logger.warning("Password is missing");
-        context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
-            .setError("Invalid username or password")
-            .createForm("login.ftl"));
-        return false;
-    }
 
     if (!validateCredentials(user, password)) {
         context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
@@ -314,10 +297,4 @@ public class AuthsignalAuthenticator implements Authenticator {
         .valueOf(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_ENROL_BY_DEFAULT));
     return enrolByDefault;
   }
-}
-
-class LoginBean {
-    private final String username;
-    public LoginBean(String username) { this.username = username; }
-    public String getUsername() { return username; }
 }
