@@ -188,7 +188,7 @@ public class AuthsignalAuthenticator implements Authenticator {
   }
 
   private String buildRedirectUrl(AuthenticationFlowContext context, String sessionCode, URI actionUri) {
-    String redirectUrl = context.getHttpRequest().getUri().getBaseUri().toString().replaceAll("/+$", "")
+    return context.getHttpRequest().getUri().getBaseUri().toString().replaceAll("/+$", "")
         + "/realms/" + URLEncoder.encode(context.getRealm().getName(), StandardCharsets.UTF_8)
         + "/authsignal-authenticator/callback" + "?kc_client_id="
         + URLEncoder.encode(context.getAuthenticationSession().getClient().getClientId(), StandardCharsets.UTF_8)
@@ -196,7 +196,6 @@ public class AuthsignalAuthenticator implements Authenticator {
         + "&kc_tab_id=" + URLEncoder.encode(context.getAuthenticationSession().getTabId(), StandardCharsets.UTF_8)
         + "&kc_session_code=" + URLEncoder.encode(sessionCode, StandardCharsets.UTF_8)
         + "&kc_action_url=" + URLEncoder.encode(actionUri.toString(), StandardCharsets.UTF_8);
-    return redirectUrl;
   }
 
   private TrackRequest createTrackRequest(AuthenticationFlowContext context, String redirectUrl) {
