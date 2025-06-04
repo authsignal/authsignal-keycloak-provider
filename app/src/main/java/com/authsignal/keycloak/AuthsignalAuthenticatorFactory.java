@@ -94,7 +94,6 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
 
   @Override
   public Authenticator create(KeycloakSession session) {
-    logger.info("Creating new AuthsignalAuthenticator instance");
     return AuthsignalAuthenticator.SINGLETON;
   }
 
