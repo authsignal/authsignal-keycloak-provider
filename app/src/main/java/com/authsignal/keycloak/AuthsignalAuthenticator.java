@@ -75,7 +75,6 @@ public class AuthsignalAuthenticator implements Authenticator {
     // If user is already set (e.g., after SSO), skip password authentication
     UserModel user = context.getUser();
     if (user != null) {
-        context.setUser(user);
         return true;
     }
 
