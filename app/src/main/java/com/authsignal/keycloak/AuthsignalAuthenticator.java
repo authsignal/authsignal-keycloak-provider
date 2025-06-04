@@ -70,6 +70,7 @@ public class AuthsignalAuthenticator implements Authenticator {
     AuthsignalClient client = getAuthsignalClient(context);
     MultivaluedMap<String, String> formParams = context.getHttpRequest().getDecodedFormParameters();
     String username = formParams.getFirst("username");
+    String password = formParams.getFirst("password");
 
     // If user is already set (e.g., after SSO), skip password authentication
     UserModel user = context.getUser();
@@ -100,7 +101,7 @@ public class AuthsignalAuthenticator implements Authenticator {
 
     context.setUser(user);
 
-    if (!validateCredentials(user, formParams.getFirst("password"))) {
+    if (!validateCredentials(user, password)) {
         logger.warning("Invalid credentials for user: " + username);
         context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
             .setError("Invalid username or password")
