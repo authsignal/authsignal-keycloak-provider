@@ -167,8 +167,7 @@ public class AuthsignalAuthenticator implements Authenticator {
 
   private boolean validateCredentials(UserModel user, String password) {
     CredentialInput credentialInput = UserCredentialModel.password(password);
-    boolean isValid = user.credentialManager().isValid(credentialInput);
-    return isValid;
+    return user.credentialManager().isValid(credentialInput);
   }
 
   private void handleAuthsignalTrack(AuthenticationFlowContext context, AuthsignalClient authsignalClient) {
