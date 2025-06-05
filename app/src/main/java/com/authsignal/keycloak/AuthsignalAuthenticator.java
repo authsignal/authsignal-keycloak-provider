@@ -70,45 +70,40 @@ public class AuthsignalAuthenticator implements Authenticator {
     AuthsignalClient client = getAuthsignalClient(context);
     MultivaluedMap<String, String> formParams = context.getHttpRequest().getDecodedFormParameters();
     String username = formParams.getFirst("username");
-    String password = formParams.getFirst("password");
+
+    UserModel user = context.getUser();
 
     // If user is already set (e.g., after SSO), skip password authentication
-    UserModel user = context.getUser();
     if (user != null) {
         return true;
     }
 
-    // If there is no username and no user, skip password authentication (likely SSO)
-    if ((username == null || username.isEmpty()) && user == null) {
-        return true;
-    }
-
+    // If username is provided, try to authenticate with password
     if (username != null && !username.isEmpty()) {
         user = context.getSession().users().getUserByUsername(context.getRealm(), username);
         if (user == null) {
             user = context.getSession().users().getUserByEmail(context.getRealm(), username);
         }
+        if (user == null) {
+            context.failureChallenge(AuthenticationFlowError.INVALID_USER, context.form()
+                .setError("Invalid username or password")
+                .createForm("login.ftl"));
+            return false;
+        }
+        context.setUser(user);
+
+        if (!validateCredentials(user, formParams.getFirst("password"))) {
+            context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
+                .setError("Invalid username or password")
+                .createForm("login.ftl"));
+            return false;
+        }
+        return true;
     }
 
-    if (user == null) {
-        logger.warning("User not found for username: " + username);
-        context.failureChallenge(AuthenticationFlowError.INVALID_USER, context.form()
-            .setError("Invalid username or password")
-            .createForm("login.ftl"));
-        return false;
-    }
-
-    context.setUser(user);
-
-    if (!validateCredentials(user, password)) {
-        logger.warning("Invalid credentials for user: " + username);
-        context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, context.form()
-            .setError("Invalid username or password")
-            .createForm("login.ftl"));
-        return false;
-    }
-    
-    return true;
+    // If neither user nor username is present, fail authentication
+    context.failure(AuthenticationFlowError.INVALID_USER);
+    return false;
   }
 
   private void handleAuthenticationFlow(AuthenticationFlowContext context) {
