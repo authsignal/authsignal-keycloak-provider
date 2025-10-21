@@ -12,14 +12,20 @@ import jakarta.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.Authenticator;
 import org.keycloak.models.AuthenticatorConfigModel;
+import org.keycloak.models.GroupModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
+import org.keycloak.models.RoleModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.UserCredentialModel;
 import org.keycloak.credential.CredentialInput;
@@ -193,6 +199,39 @@ public class AuthsignalAuthenticator implements Authenticator {
     request.attributes.userAgent = context.getHttpRequest().getHttpHeaders().getHeaderString("User-Agent");
     request.userId = context.getUser().getId();
     request.attributes.username = context.getUser().getUsername();
+    
+    // Add Keycloak groups and roles as custom attributes for use in Authsignal rules
+    UserModel user = context.getUser();
+    Map<String, Object> customData = new HashMap<>();
+    
+    // Extract user groups
+    List<String> groups = user.getGroupsStream()
+        .map(GroupModel::getName)
+        .collect(Collectors.toList());
+    if (!groups.isEmpty()) {
+      customData.put("keycloakGroups", groups);
+    }
+    
+    // Extract realm roles
+    List<String> realmRoles = user.getRealmRoleMappingsStream()
+        .map(RoleModel::getName)
+        .collect(Collectors.toList());
+    if (!realmRoles.isEmpty()) {
+      customData.put("keycloakRoles", realmRoles);
+    }
+    
+    // Extract client roles (optional - includes roles from all clients)
+    List<String> clientRoles = user.getClientRoleMappingsStream()
+        .map(RoleModel::getName)
+        .collect(Collectors.toList());
+    if (!clientRoles.isEmpty()) {
+      customData.put("keycloakClientRoles", clientRoles);
+    }
+    
+    if (!customData.isEmpty()) {
+      request.attributes.custom = customData;
+    }
+    
     return request;
   }
 
