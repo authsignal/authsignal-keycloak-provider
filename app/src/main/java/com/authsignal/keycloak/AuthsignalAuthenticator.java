@@ -200,11 +200,9 @@ public class AuthsignalAuthenticator implements Authenticator {
     request.userId = context.getUser().getId();
     request.attributes.username = context.getUser().getUsername();
     
-    // Add Keycloak groups and roles as custom attributes for use in Authsignal rules
     UserModel user = context.getUser();
     Map<String, Object> customData = new HashMap<>();
     
-    // Extract user groups
     List<String> groups = user.getGroupsStream()
         .map(GroupModel::getName)
         .collect(Collectors.toList());
@@ -212,7 +210,6 @@ public class AuthsignalAuthenticator implements Authenticator {
       customData.put("keycloakGroups", groups);
     }
     
-    // Extract realm roles
     List<String> realmRoles = user.getRealmRoleMappingsStream()
         .map(RoleModel::getName)
         .collect(Collectors.toList());
@@ -220,7 +217,6 @@ public class AuthsignalAuthenticator implements Authenticator {
       customData.put("keycloakRoles", realmRoles);
     }
     
-    // Extract client roles from all clients
     List<String> clientRoles = user.getRoleMappingsStream()
         .filter(role -> role.isClientRole())
         .map(RoleModel::getName)
