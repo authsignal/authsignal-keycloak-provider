@@ -220,8 +220,9 @@ public class AuthsignalAuthenticator implements Authenticator {
       customData.put("keycloakRoles", realmRoles);
     }
     
-    // Extract client roles (optional - includes roles from all clients)
-    List<String> clientRoles = user.getClientRoleMappingsStream()
+    // Extract client roles from all clients
+    List<String> clientRoles = user.getRoleMappingsStream()
+        .filter(role -> role.isClientRole())
         .map(RoleModel::getName)
         .collect(Collectors.toList());
     if (!clientRoles.isEmpty()) {
