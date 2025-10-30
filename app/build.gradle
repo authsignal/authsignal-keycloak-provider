@@ -10,7 +10,7 @@ plugins {
 }
 
 group 'com.authsignal'
-version '2.1.5'
+version '2.2.0'
 
 repositories {
     mavenCentral()
@@ -20,7 +20,7 @@ dependencies {
     implementation 'org.keycloak:keycloak-core:26.0.5' // Adjust version as needed
     implementation 'org.keycloak:keycloak-server-spi:26.0.5' // Adjust version as needed
     implementation 'org.keycloak:keycloak-server-spi-private:26.0.5' // Adjust version as needed
-    implementation group: 'com.authsignal', name: 'authsignal-java', version: '2.0.1'
+    implementation group: 'com.authsignal', name: 'authsignal-java', version: '2.9.1'
     implementation group: 'jakarta.ws.rs', name: 'jakarta.ws.rs-api', version: '4.0.0'
 }
 
