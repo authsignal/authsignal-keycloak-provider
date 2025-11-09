@@ -149,6 +149,10 @@ public class AuthsignalAuthenticator implements Authenticator {
             }
             context.setUser(user);
             context.success();
+        } else if (response.state == UserActionState.CHALLENGE_REQUIRED) {
+            // User quit the MFA flow without completing the challenge
+            // This means they clicked "Quit" on the AuthSignal page
+            context.resetFlow();
         } else {
             context.failure(AuthenticationFlowError.ACCESS_DENIED);
         }
