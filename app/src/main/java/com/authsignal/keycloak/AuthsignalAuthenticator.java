@@ -7,6 +7,7 @@ import com.authsignal.model.TrackResponse;
 import com.authsignal.model.UserActionState;
 import com.authsignal.model.ValidateChallengeRequest;
 import com.authsignal.model.ValidateChallengeResponse;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import java.net.URI;
@@ -203,6 +204,12 @@ public class AuthsignalAuthenticator implements Authenticator {
     request.attributes.userAgent = context.getHttpRequest().getHttpHeaders().getHeaderString("User-Agent");
     request.userId = context.getUser().getId();
     request.attributes.username = context.getUser().getUsername();
+    
+    // Get deviceId from __as_aid cookie (set by Authsignal Web SDK)
+    Cookie deviceIdCookie = context.getHttpRequest().getHttpHeaders().getCookies().get("__as_aid");
+    if (deviceIdCookie != null) {
+      request.attributes.deviceId = deviceIdCookie.getValue();
+    }
     
     UserModel user = context.getUser();
     Map<String, Object> customData = new HashMap<>();
