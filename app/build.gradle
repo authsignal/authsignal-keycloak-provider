@@ -10,7 +10,7 @@ plugins {
 }
 
 group 'com.authsignal'
-version '2.2.1'
+version '2.2.2'
 
 repositories {
     mavenCentral()
