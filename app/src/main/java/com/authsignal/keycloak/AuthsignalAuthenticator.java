@@ -148,7 +148,9 @@ public class AuthsignalAuthenticator implements Authenticator {
             String userId = response.userId;
             if (flowUser != null) {
                 boolean allowedAction = actionCode(context).equals(response.action)
-                    || (passkeyAutofill && isPasskeyActionCode(context, response.action));
+                    || (passkeyAutofill
+                        && response.state == UserActionState.CHALLENGE_SUCCEEDED
+                        && isPasskeyActionCode(context, response.action));
                 if (!flowUser.getId().equals(userId) || !allowedAction) {
                     context.failure(AuthenticationFlowError.INVALID_USER);
                     return;
