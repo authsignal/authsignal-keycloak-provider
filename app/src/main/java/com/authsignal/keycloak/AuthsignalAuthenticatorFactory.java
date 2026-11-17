@@ -25,6 +25,11 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
   public static final String PROP_ACTION_CODE = "authsignal.actionCode";
   public static final String PROP_ENROL_BY_DEFAULT = "authsignal.enrolByDefault";
   public static final String PROP_PASSKEY_AUTOFILL = "passkey-autofill";
+  public static final String PROP_PASSKEY_ACTION_CODE = "authsignal.passkeyActionCode";
+  // Accepted when no passkey action code is configured: "passkey-verify" is what Authsignal
+  // assigns when the login page calls passkey.signIn() without an action.
+  public static final List<String> DEFAULT_PASSKEY_ACTION_CODES =
+      List.of("passkey-verify", "signInWithPasskeyAutofill");
 
   private static AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES =
       {AuthenticationExecutionModel.Requirement.REQUIRED,
@@ -85,6 +90,15 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
     passkeyAutofill.setDefaultValue(false);
     passkeyAutofill.setHelpText("Optional: Enable passkey autofill functionality. Defaults to false.");
     configProperties.add(passkeyAutofill);
+
+    ProviderConfigProperty passkeyActionCode = new ProviderConfigProperty();
+    passkeyActionCode.setName(PROP_PASSKEY_ACTION_CODE);
+    passkeyActionCode.setLabel("Passkey autofill action code");
+    passkeyActionCode.setType(ProviderConfigProperty.STRING_TYPE);
+    passkeyActionCode.setHelpText("Optional: Action code the login page passes to passkey "
+        + "sign-in. Leave empty to accept " + String.join(" or ", DEFAULT_PASSKEY_ACTION_CODES)
+        + ".");
+    configProperties.add(passkeyActionCode);
   }
 
   @Override

@@ -114,14 +114,9 @@ public class AuthsignalAuthenticator implements Authenticator {
   private void handleAuthenticationFlow(AuthenticationFlowContext context) {
     AuthsignalClient client = getAuthsignalClient(context);
 
-    MultivaluedMap<String, String> queryParams = context.getUriInfo().getQueryParameters();
     MultivaluedMap<String, String> formParams = context.getHttpRequest().getDecodedFormParameters();
 
     String token = formParams.getFirst("token");
-    
-    if (token == null) {
-        token = queryParams.getFirst("token");
-    }
 
     if (token != null && !token.isEmpty()) {
         handleTokenValidation(context, client, token);
@@ -137,12 +132,38 @@ public class AuthsignalAuthenticator implements Authenticator {
   private void handleTokenValidation(AuthenticationFlowContext context, AuthsignalClient authsignalClient, String token) {
     ValidateChallengeRequest request = new ValidateChallengeRequest();
     request.token = token;
+    // Bind the token to the user already authenticated earlier in the flow, if any. Without a flow
+    // user, only a passkey sign-in from the login page can identify the user.
+    UserModel flowUser = context.getUser();
+    boolean passkeyAutofill = isPasskeyAutofill(context);
+    if (flowUser != null) {
+        request.userId = flowUser.getId();
+        if (!passkeyAutofill) {
+            request.action = actionCode(context);
+        }
+    }
 
     try {
         ValidateChallengeResponse response = authsignalClient.validateChallenge(request).get();
 
         if (response.state == UserActionState.CHALLENGE_SUCCEEDED || response.state == UserActionState.ALLOW) {
             String userId = response.userId;
+            if (flowUser != null) {
+                boolean allowedAction = actionCode(context).equals(response.action)
+                    || (passkeyAutofill && isPasskeyActionCode(context, response.action));
+                if (!flowUser.getId().equals(userId) || !allowedAction) {
+                    context.failure(AuthenticationFlowError.INVALID_USER);
+                    return;
+                }
+                context.success();
+                return;
+            }
+            if (!passkeyAutofill
+                || response.state != UserActionState.CHALLENGE_SUCCEEDED
+                || !isPasskeyActionCode(context, response.action)) {
+                context.failure(AuthenticationFlowError.ACCESS_DENIED);
+                return;
+            }
             UserModel user = context.getSession().users().getUserById(context.getRealm(), userId);
             if (user == null) {
                 context.failure(AuthenticationFlowError.INVALID_USER);
@@ -337,6 +358,22 @@ public class AuthsignalAuthenticator implements Authenticator {
       return "sign-in";
     }
     return actionCode;
+  }
+
+  private boolean isPasskeyAutofill(AuthenticationFlowContext context) {
+    AuthenticatorConfigModel config = context.getAuthenticatorConfig();
+    return config != null
+        && Boolean.parseBoolean(config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_PASSKEY_AUTOFILL));
+  }
+
+  private boolean isPasskeyActionCode(AuthenticationFlowContext context, String action) {
+    AuthenticatorConfigModel config = context.getAuthenticatorConfig();
+    String passkeyActionCode =
+        config == null ? null : config.getConfig().get(AuthsignalAuthenticatorFactory.PROP_PASSKEY_ACTION_CODE);
+    if (passkeyActionCode == null || passkeyActionCode.isEmpty()) {
+      return AuthsignalAuthenticatorFactory.DEFAULT_PASSKEY_ACTION_CODES.contains(action);
+    }
+    return passkeyActionCode.equals(action);
   }
 
   private Boolean enrolByDefault(AuthenticationFlowContext context) {
