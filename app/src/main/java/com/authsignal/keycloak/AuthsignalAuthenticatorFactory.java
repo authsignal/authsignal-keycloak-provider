@@ -26,8 +26,6 @@ public class AuthsignalAuthenticatorFactory implements AuthenticatorFactory {
   public static final String PROP_ENROL_BY_DEFAULT = "authsignal.enrolByDefault";
   public static final String PROP_PASSKEY_AUTOFILL = "passkey-autofill";
   public static final String PROP_PASSKEY_ACTION_CODE = "authsignal.passkeyActionCode";
-  // Accepted when no passkey action code is configured: "passkey-verify" is what Authsignal
-  // assigns when the login page calls passkey.signIn() without an action.
   public static final List<String> DEFAULT_PASSKEY_ACTION_CODES =
       List.of("passkey-verify", "signInWithPasskeyAutofill");
 

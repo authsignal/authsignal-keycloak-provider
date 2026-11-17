@@ -132,8 +132,6 @@ public class AuthsignalAuthenticator implements Authenticator {
   private void handleTokenValidation(AuthenticationFlowContext context, AuthsignalClient authsignalClient, String token) {
     ValidateChallengeRequest request = new ValidateChallengeRequest();
     request.token = token;
-    // Bind the token to the user already authenticated earlier in the flow, if any. Without a flow
-    // user, only a passkey sign-in from the login page can identify the user.
     UserModel flowUser = context.getUser();
     boolean passkeyAutofill = isPasskeyAutofill(context);
     if (flowUser != null) {

@@ -72,7 +72,6 @@ public class GetShimResource {
       return Response.status(400).type(MediaType.TEXT_PLAIN).entity("Invalid kc_action_url").build();
     }
 
-    // The token goes in the POST body rather than the URL to keep it out of logs and history.
     String formAction =
         UriBuilder.fromUri(kcActionUrl)
             .replaceQueryParam("session_code", "{sessionCode}")
@@ -94,10 +93,6 @@ public class GetShimResource {
         .build();
   }
 
-  /**
-   * Returns the action URL only if it points at this realm's login-actions endpoint on the same
-   * origin Keycloak is serving this request from, otherwise null.
-   */
   private static URI validateActionUrl(String value, UriInfo uriInfo, String realm) {
     if (value == null) {
       return null;
